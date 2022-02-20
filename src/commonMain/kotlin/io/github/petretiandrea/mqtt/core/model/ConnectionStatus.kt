@@ -1,0 +1,10 @@
+package io.github.petretiandrea.mqtt.core.model
+
+enum class ConnectionStatus {
+    ACCEPT,
+    REFUSED_UNACCEPTABLE_PROTOCOL_VERSION,
+    REFUSED_IDENTIFIER_REJECTED,
+    REFUSED_SERVER_UNAVAILABLE,
+    REFUSED_BAD_LOGIN,
+    REFUSED_NOT_AUTHORIZED;
+}
