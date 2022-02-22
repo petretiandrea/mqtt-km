@@ -7,6 +7,7 @@ import io.github.petretiandrea.socket.stream.OutputStream
 interface SocketInterface {
     fun inputStream(): InputStream
     fun outputStream(): OutputStream
+    fun isConnected(): Boolean
     suspend fun close()
 }
 

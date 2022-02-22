@@ -17,7 +17,7 @@ class PacketParserOfflineTest {
         val header = FixedHeader(Type.CONNECT, false, QoS.Q0, false)
         val bytes = header.toByteArray(0)
         assert(bytes.isNotEmpty())
-        val parsedHeader = FixedHeader.fromByte(bytes[0].toByte()).getOrNull()
+        val parsedHeader = FixedHeader.fromByte(bytes[0].toUByte()).getOrNull()
         assertEquals(header, parsedHeader)
     }
 

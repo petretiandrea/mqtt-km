@@ -9,7 +9,7 @@ data class ConnectionSettings(
     val username: String?,
     val password: String?,
     val cleanSession: Boolean,
-    val willMessage: Message,
+    val willMessage: Message?,
     val keepAliveSeconds: Int
 )
 

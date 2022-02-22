@@ -9,6 +9,16 @@ import platform.windows.PVOID
 import platform.windows.WSAEWOULDBLOCK
 import platform.windows.WSAGetLastError
 
+actual fun setReadTimeout(socket: Int, timeoutMicros: Int): Int {
+    return memScoped {
+        val timeout = alloc<timeval>().apply {
+            tv_sec = 0
+            tv_usec = timeoutMicros
+        }
+        platform.posix.setsockopt(socket.convert(), SOL_SOCKET, SO_RCVTIMEO, timeout.ptr.toString(), sizeOf<timeval>().toInt())
+    }
+}
+
 actual fun send(socket: Int, buf: CValuesRef<ByteVar>?, len: Int, flags: Int): Int {
     return platform.posix.send(socket.convert(), buf, len, flags)
 }

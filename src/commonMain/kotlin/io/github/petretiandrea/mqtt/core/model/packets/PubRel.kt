@@ -15,6 +15,8 @@ data class PubRel(
         }
     }
 
+    override val qos: QoS = QoS.Q1
+
     override fun toByteArray(): UByteArray {
         val bytes = ByteArray(2).apply {
             this[0] = (messageId shr 8).toByte()
@@ -23,7 +25,7 @@ data class PubRel(
         return FixedHeader(
             type = Type.PUBREL,
             retain = false,
-            qos = QoS.Q1,
+            qos = qos,
             duplicate = false
         ).toByteArray(2) + bytes.toUByteArray()
     }

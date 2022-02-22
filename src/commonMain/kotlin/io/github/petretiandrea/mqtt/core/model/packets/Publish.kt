@@ -8,6 +8,8 @@ data class Publish(
     val message: Message
 ) : MqttPacket {
 
+    override val qos: QoS = message.qos
+
     override fun toByteArray(): UByteArray {
         val bytes = mutableListOf<Byte>()
         bytes.writeString(message.topic)

@@ -18,8 +18,8 @@ data class Connect(
     val willMessage: Message?
 ) : MqttPacket {
 
-    val protocolName: String = if (version == MqttVersion.MQTT_31) "MQIsdp" else "MQTT"
-    val protocolLevel: Int = if (version == MqttVersion.MQTT_31) 3 else 4
+    private val protocolName: String = if (version == MqttVersion.MQTT_31) "MQIsdp" else "MQTT"
+    private val protocolLevel: Int = if (version == MqttVersion.MQTT_31) 3 else 4
 
     companion object : MqttDeserializer {
         private const val FLAG_CLEAN_SESSION: Byte = 2
@@ -32,6 +32,8 @@ data class Connect(
             TODO("Not yet implemented")
         }
     }
+
+    override val qos: QoS = QoS.Q0
 
     override fun toByteArray(): UByteArray {
         val output = mutableListOf<Byte>()
@@ -81,7 +83,7 @@ data class Connect(
             output.writeString(password)
         }
 
-        return FixedHeader(Type.CONNECT, false, QoS.Q0, false).toByteArray(output.size) + output.toByteArray()
+        return FixedHeader(Type.CONNECT, false, qos, false).toByteArray(output.size) + output.toByteArray()
             .toUByteArray()
     }
 }

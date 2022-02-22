@@ -3,6 +3,11 @@ package io.github.petretiandrea.socket
 import kotlinx.cinterop.MemScope
 import platform.posix.sockaddr_in
 
+expect fun setReadTimeout(
+    socket: Int,
+    timeoutMicros: Int
+): Int
+
 expect fun send(
     socket: Int,
     buf: kotlinx.cinterop.CValuesRef<kotlinx.cinterop.ByteVar /* = kotlinx.cinterop.ByteVarOf<kotlin.Byte> */>?,

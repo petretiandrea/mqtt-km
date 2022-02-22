@@ -2,7 +2,6 @@ package io.github.petretiandrea.mqtt.core.model.packets
 
 import io.github.petretiandrea.mqtt.core.model.ConnectionStatus
 import io.github.petretiandrea.mqtt.core.model.MqttDeserializer
-import kotlinx.cinterop.toByte
 
 @ExperimentalUnsignedTypes
 data class ConnAck internal constructor(
@@ -25,12 +24,13 @@ data class ConnAck internal constructor(
         }
     }
 
+    override val qos: QoS = QoS.Q0
 
     override fun toByteArray(): UByteArray {
-        val fixedHeader = FixedHeader(Type.CONNACK, false, QoS.Q0, false)
+        val fixedHeader = FixedHeader(Type.CONNACK, false, qos, false)
         val bytes = UByteArray(2).apply {
             this[0] =
-                if (connectionStatus != ConnectionStatus.ACCEPT) 0.toUByte() else sessionPresent.toByte().toUByte()
+                if (connectionStatus != ConnectionStatus.ACCEPT) 0.toUByte() else (if (sessionPresent) 1 else 0).toUByte()
             this[1] = connectionStatus.ordinal.toUByte()
         }
         return fixedHeader.toByteArray(2) + bytes

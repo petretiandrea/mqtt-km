@@ -3,31 +3,57 @@ package io.github.petretiandrea.socket
 import io.github.petretiandrea.socket.buffer.BufferOverflowException
 import io.github.petretiandrea.socket.buffer.MultiplatformBuffer
 import io.github.petretiandrea.socket.buffer.NativeMultiplatformBuffer
+import io.github.petretiandrea.socket.exception.SocketErrorReason
 import io.github.petretiandrea.socket.exception.SocketException
 import io.github.petretiandrea.socket.stream.InputStream
 import io.github.petretiandrea.socket.stream.OutputStream
 import kotlinx.cinterop.*
 import platform.posix.*
+import platform.windows.addrinfo
+import platform.windows.getaddrinfo
+import platform.windows.select
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
 
 @OptIn(ExperimentalUnsignedTypes::class)
 actual fun createSocket(hostname: String, port: Int): SocketInterface {
     memScoped {
         Socket.initializeSockets()
-        val socketFd = platform.posix.socket(AF_INET, SOCK_STREAM, 0).toInt()
-        if (socketFd == -1) {
-            throw SocketException("Invalid socket: error $errno")
+        val hints = alloc<addrinfo>()
+        val result = allocPointerTo<addrinfo>()
+
+        with(hints) {
+            memset(this.ptr, 0, sizeOf<addrinfo>().toULong())
+            this.ai_family = AF_INET
+            this.ai_socktype = SOCK_STREAM
+            this.ai_flags = 0
+            this.ai_protocol = 0
         }
-        val targetAddress = sockaddrIn(AF_INET.convert(), port.convert())
-        if (inet_pton(AF_INET, hostname, targetAddress.sin_addr.ptr) <= 0) {
+
+        if (getaddrinfo(hostname, port.toString(), hints.ptr, result.ptr) != 0) {
             throw SocketException("Invalid address: $hostname")
         }
-        if (connect(socketFd.convert(), targetAddress.ptr.reinterpret(), sizeOf<sockaddr>().toInt()) < 0) {
-            throw SocketException("Connection failed!")
+
+        var socketInterface: SocketInterface? = null
+        with(result) {
+            var next : addrinfo? = this.pointed
+            while(next != null && socketInterface == null){
+                val socket = socket(next.ai_family, next.ai_socktype, next.ai_protocol)
+                if (socket != -1) {
+                    val connected = connect(socket.convert(), next.ai_addr, next.ai_addrlen.toInt())
+                    if (connected >= 0 || posix_errno() == EINPROGRESS) {
+                        socketInterface = Socket(
+                            socketFd = socket,
+                            maxSendBufferSize = Socket.getMaxSendBuffOption(socket)
+                        )
+                    } else {
+                        close(socket)
+                        next = next.ai_next?.pointed
+                    }
+                }
+            }
         }
-        return Socket(
-            socketFd = socketFd,
-            maxSendBufferSize = Socket.getMaxSendBuffOption(socketFd)
-        )
+        return socketInterface ?: throw SocketException("Cannot connect to $hostname on $port")
     }
 }
 
@@ -50,11 +76,24 @@ class Socket(
             }
         }
     }
-    override fun inputStream(): InputStream = SocketInputStream(socketFd)
 
-    override fun outputStream(): OutputStream = SocketOutputStream(socketFd, maxSendBufferSize)
+    private val socketInputStream = SocketInputStream(socketFd)
+    private val socketOutputStream = SocketOutputStream(socketFd, maxSendBufferSize)
+
+    override fun inputStream(): InputStream = socketInputStream
+    override fun outputStream(): OutputStream = socketOutputStream
+
+    override fun isConnected(): Boolean {
+        return memScoped {
+            val error = alloc<IntVar>()
+            val isConnected = getsockopt(socketFd.convert(), SOL_SOCKET, SO_ERROR, error.ptr.reinterpret(), sizeOf<IntVar>().toCPointer())
+            error.value <= 0 && isConnected != 0
+        }
+    }
 
     override suspend fun close() {
+        inputStream().close()
+        outputStream().close()
         shutdown(socketFd)
         platform.posix.close(socketFd)
     }
@@ -62,27 +101,46 @@ class Socket(
     private class SocketInputStream(
         private val socketFd: Int
     ) : InputStream {
+
+        private val readFds = nativeHeap.alloc<fd_set>()
+
         override suspend fun read(buffer: MultiplatformBuffer): Int {
+            return read(buffer, Duration.ZERO)
+        }
+
+        override suspend fun read(buffer: MultiplatformBuffer, timeout: Duration): Int {
             val nativeBuffer = buffer as NativeMultiplatformBuffer
             if (nativeBuffer.remaining() <= 0) throw BufferOverflowException()
 
-            val readSize = platform.posix.recv(
-                socketFd.convert(),
-                nativeBuffer.nativePointer() + nativeBuffer.cursor,
-                nativeBuffer.remaining(),
-                0
-            )
-            when {
-                readSize > 0 -> {
-                    nativeBuffer.cursor = readSize
-                }
-                else -> throw SocketException("Peer closed connection")
+            val ready = memScoped {
+                posix_FD_ZERO(readFds.ptr)
+                posix_FD_SET(socketFd.convert(), readFds.ptr)
+                select(2, readFds.ptr, null, null, timeout.inWholeMilliseconds)
             }
 
-            return readSize
+            return when (ready) {
+                0 -> throw SocketException(SocketErrorReason.TIMEOUT)
+                -1 -> throw SocketException("Peer closed connection")
+                else -> if (posix_FD_ISSET(socketFd.convert(), readFds.ptr) == 1) {
+                    val readSize = platform.posix.recv(
+                        socketFd.convert(),
+                        nativeBuffer.nativePointer() + nativeBuffer.cursor,
+                        nativeBuffer.remaining(),
+                        0
+                    )
+                    when {
+                        readSize > 0 -> {
+                            nativeBuffer.cursor = readSize
+                        }
+                        else -> throw SocketException("Peer closed connection")
+                    }
+                    readSize
+                } else throw SocketException("This should not happen")
+            }
         }
 
         override suspend fun close() {
+            nativeHeap.free(readFds)
             shutdown(socketFd.convert(), SD_RECEIVE)
         }
     }

@@ -32,7 +32,7 @@ data class FixedHeader(
     val duplicate: Boolean
 ) {
     companion object {
-        fun fromByte(fixedHeader: Byte): Result<FixedHeader> {
+        fun fromByte(fixedHeader: UByte): Result<FixedHeader> {
             val parsedType = Type.values().firstOrNull { it.value == (fixedHeader.toInt() and 240) shr 4 }
             val parsedQos = QoS.values().firstOrNull { it.ordinal == (fixedHeader.toInt() and 6) shr 1 }
             return parsedType?.let { type ->

@@ -16,10 +16,7 @@ internal class TransportTCP : Transport {
     private var mqttReader: BufferedPacketReader? = null
     private var outputStream: OutputStream? = null
 
-    override suspend fun isConnected(): Boolean {
-        TODO()
-        return true
-    }
+    override suspend fun isConnected(): Boolean = socket?.isConnected() ?: false
 
     override suspend fun connect(hostname: String, port: Int): Result<Unit> {
         return kotlin.runCatching {
@@ -35,13 +32,7 @@ internal class TransportTCP : Transport {
 
     override suspend fun readPacket(timeout: Duration): Result<MqttPacket> {
         return kotlin.runCatching {
-            if (timeout > Duration.ZERO) {
-                withTimeout(timeout) {
-                    mqttReader?.next() ?: throw Exception("Parse error")
-                }
-            } else {
-                mqttReader?.next() ?: throw Exception("Parse error")
-            }
+            mqttReader?.next(timeout) ?: throw Exception("Parse error")
         }
     }
 

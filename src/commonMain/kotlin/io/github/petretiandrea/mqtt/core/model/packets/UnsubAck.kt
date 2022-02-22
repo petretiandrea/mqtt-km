@@ -16,6 +16,8 @@ data class UnsubAck(
 
     }
 
+    override val qos: QoS = QoS.Q0
+
     override fun toByteArray(): UByteArray {
         val bytes = ByteArray(2).apply {
             this[0] = (messageId shr 8).toByte()
@@ -25,7 +27,7 @@ data class UnsubAck(
         return FixedHeader(
             type = Type.UNSUBACK,
             retain = false,
-            qos = QoS.Q0,
+            qos = qos,
             duplicate = false
         ).toByteArray(2) + bytes.toUByteArray()
     }
