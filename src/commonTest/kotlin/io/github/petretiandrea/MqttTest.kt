@@ -1,21 +1,27 @@
 package io.github.petretiandrea
 
+import io.github.petretiandrea.AsyncTest.waitCallback
 import io.github.petretiandrea.mqtt.MqttClient
 import io.github.petretiandrea.mqtt.MqttClientImpl
 import io.github.petretiandrea.mqtt.core.ConnectionSettings
 import io.github.petretiandrea.mqtt.core.MqttVersion
 import io.github.petretiandrea.mqtt.core.model.Message
-import io.github.petretiandrea.mqtt.core.model.packets.Connect
-import io.github.petretiandrea.mqtt.core.model.packets.MqttPacket
-import io.github.petretiandrea.mqtt.core.model.packets.QoS
+import io.github.petretiandrea.mqtt.core.model.MessageId
+import io.github.petretiandrea.mqtt.core.model.packets.*
 import io.github.petretiandrea.mqtt.core.session.ClientSession
 import io.github.petretiandrea.mqtt.core.transport.Transport
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.callbackFlow
+import platform.posix.time
+import kotlin.native.concurrent.Future
 import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+
 
 @ExperimentalUnsignedTypes
 class MqttTest {
@@ -40,11 +46,9 @@ class MqttTest {
         )
 
         fun createDefaultClient(scope: CoroutineScope, keepAliveSeconds: Int = 10): MqttClient {
-            return MqttClientImpl(
-                transport = Transport.tcp(),
-                connectionSettings = SETTINGS.copy(keepAliveSeconds = keepAliveSeconds),
-                scope = scope,
-                session = ClientSession(SETTINGS.clientId, SETTINGS.cleanSession)
+            return MqttClient(
+                scope,
+                SETTINGS.copy(keepAliveSeconds = keepAliveSeconds),
             )
         }
     }
@@ -100,23 +104,88 @@ class MqttTest {
     }
 
     @Test
-    fun canPublishQos0() = runBlocking {
+    fun mustPublishWithQos0() = runBlocking {
         client = createDefaultClient(this).apply { connect() }
-        val published = client.publish(Message(0, "test/kotlin", "hello", QoS.Q0, retain = false, duplicate = false))
-        assert(published)
+        assert(
+            client.publish(Message(0, "test/kotlin", "hello", QoS.Q0, retain = false, duplicate = false))
+        )
+        teardown()
+    }
+
+    @Test
+    fun mustPublishWithQos1() = runBlocking {
+        client = createDefaultClient(this).apply { connect() }
+        val message = Message(MessageId.generate(), "test/kotlin", "hello", QoS.Q1, retain = false, duplicate = false)
+        val waitPublish = waitCallback<Message>(2.seconds) {
+            client.onDeliveryCompleted { trySend(it) }
+        }
+
+        assert(client.publish(message))
+        waitPublish().let {
+            assertEquals(message.topic, it.topic)
+            assertEquals(message.message, it.message)
+            assertEquals(message.qos, it.qos)
+        }
 
         teardown()
     }
 
     @Test
-    fun mustSubscribeToTopic() = runBlocking {
-        client = createDefaultClient(this)
-        client.subscribe("test/kotlin", QoS.Q0)
+    fun mustPublishWithQos2() = runBlocking {
+        client = createDefaultClient(this).apply { connect() }
+        val message = Message(MessageId.generate(), "test/kotlin", "hello", QoS.Q2, retain = false, duplicate = false)
+        val waitPublish = waitCallback<Message>(2.seconds) {
+            client.onDeliveryCompleted { trySend(it) }
+        }
 
-        client.publish(Message(0, "test/kotlin", "ciaooo", QoS.Q0, false, false))
+        assert(client.publish(message))
+        waitPublish().let {
+            assertEquals(message.topic, it.topic)
+            assertEquals(message.message, it.message)
+            assertEquals(message.qos, it.qos)
+        }
 
         teardown()
     }
 
+    @Test
+    fun mustSubscribeToTopicQos0() = runBlocking {
+        client = createDefaultClient(this)
+        assert(client.subscribe("test/kotlin", QoS.Q0))
+
+        teardown()
+    }
+
+    @Test
+    fun mustSubscribeToTopicQos1() = runBlocking {
+        client = createDefaultClient(this).apply { connect() }
+        val topic = "test/kotlin"
+        val waitSubscribe = waitCallback<Subscribe>(timeout = 2.seconds) {
+            client.onSubscribeCompleted {
+                trySend(it)
+            }
+        }
+        assert(client.subscribe(topic, QoS.Q1))
+        val subscription = waitSubscribe()
+        assertEquals(topic, subscription.topic)
+        assertEquals(QoS.Q1, subscription.qos)
+        teardown()
+    }
+
+    @Test
+    fun mustSubscribeToTopicQos2() = runBlocking {
+        client = createDefaultClient(this).apply { connect() }
+        val topic = "test/kotlin"
+        val waitSubscribe = waitCallback<Subscribe>(timeout = 2.seconds) {
+            client.onSubscribeCompleted {
+                trySend(it)
+            }
+        }
+        assert(client.subscribe(topic, QoS.Q2))
+        val subscription = waitSubscribe()
+        assertEquals(topic, subscription.topic)
+        assertEquals(QoS.Q2, subscription.qos)
+        teardown()
+    }
 
 }

@@ -2,35 +2,23 @@ package io.github.petretiandrea.mqtt
 
 import io.github.petretiandrea.flatMap
 import io.github.petretiandrea.mqtt.core.ConnectionSettings
+import io.github.petretiandrea.mqtt.core.Protocol
 import io.github.petretiandrea.mqtt.core.asConnectPacket
 import io.github.petretiandrea.mqtt.core.model.ConnectionStatus
 import io.github.petretiandrea.mqtt.core.model.Message
 import io.github.petretiandrea.mqtt.core.model.MessageId
 import io.github.petretiandrea.mqtt.core.model.packets.*
+import io.github.petretiandrea.mqtt.core.session.ClientSession
 import io.github.petretiandrea.mqtt.core.session.Session
 import io.github.petretiandrea.mqtt.core.transport.Transport
 import io.github.petretiandrea.socket.exception.SocketErrorReason
 import io.github.petretiandrea.socket.exception.SocketException
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharedFlow
 import kotlin.time.Duration.Companion.milliseconds
 
-interface DeliveryCallback {
-    fun onDeliveryCompleted(message: Message)
-}
-
-interface SubscribeCallback {
-    fun onSubscribeCompleted(subscribe: Subscribe)
-    fun onMessageReceived(message: Message)
-    fun onUnsubscribeCompleted(unsubscribe: Unsubscribe)
-}
-
-interface ConnectionStateCallback {
-    fun onLostConnection(error: Exception)
-    fun onDisconnect()
-}
-
-interface MqttClient {
+interface MqttClient : ClientCallback {
     val isConnected: Boolean
 
     suspend fun connect(): Result<Unit>
@@ -40,21 +28,37 @@ interface MqttClient {
     suspend fun subscribe(topic: String, qoS: QoS): Boolean
     suspend fun unsubscribe(topic: String): Boolean
 
-    suspend fun registerDeliveryCallback(deliveryCallback: DeliveryCallback): Boolean
-    suspend fun registerSubscribeCallback(subscribeCallback: SubscribeCallback): Boolean
+    companion object {
+        operator fun invoke(
+            scope: CoroutineScope,
+            connectionSettings: ConnectionSettings,
+            session: Session = ClientSession(connectionSettings.clientId, connectionSettings.cleanSession)
+        ): MqttClient {
+            return MqttClientImpl(
+                connectionSettings = connectionSettings,
+                transport = when (connectionSettings.protocol) {
+                    Protocol.TCP -> Transport.tcp()
+                    Protocol.SSL -> Transport.ssl()
+                    Protocol.WS -> Transport.websocket()
+                },
+                scope = scope,
+                session = session
+            )
+        }
+    }
 }
 
-
-@ExperimentalUnsignedTypes
-class MqttClientImpl(
+@OptIn(ExperimentalUnsignedTypes::class)
+internal class MqttClientImpl constructor(
     private val connectionSettings: ConnectionSettings,
     private val transport: Transport,
     private val scope: CoroutineScope,
-    session: Session
-) : MqttClient {
+    private val callbackRegistry: CallbackRegistry = ClientCallback.registry(),
+    private var session: Session
+) : MqttClient, ClientCallback by callbackRegistry {
 
     companion object {
-        val SOCKET_IO_TIMEOUT = (0.5 * 1000).milliseconds
+        private val SOCKET_IO_TIMEOUT = (0.5 * 1000).milliseconds
     }
 
     override var isConnected: Boolean = false
@@ -63,11 +67,7 @@ class MqttClientImpl(
     // TODO: implements using actors and channels
     private val eventLoopContext = newSingleThreadContext("mqtt-eventloop")
     private val pingHelper: PingHelper = PingHelper(connectionSettings.keepAliveSeconds * 1000L, transport)
-
-    private var clientSession = session
     private var outgoingQueue = emptyList<MqttPacket>()
-    private var deliveryCallbacks = emptyList<DeliveryCallback>()
-    private var subscribeCallbacks = emptyList<SubscribeCallback>()
     private var eventLoop: Job? = null
 
     override suspend fun connect(): Result<Unit> {
@@ -117,18 +117,6 @@ class MqttClientImpl(
         true
     }
 
-    override suspend fun registerDeliveryCallback(deliveryCallback: DeliveryCallback): Boolean =
-        withContext(eventLoopContext) {
-            deliveryCallbacks += deliveryCallback
-            true
-        }
-
-    override suspend fun registerSubscribeCallback(subscribeCallback: SubscribeCallback): Boolean =
-        withContext(eventLoopContext) {
-            subscribeCallbacks += subscribeCallback
-            true
-        }
-
     private suspend fun eventLoop(): Unit = withContext(eventLoopContext) {
         while (isActive) {
             sendPendingQueue()
@@ -160,69 +148,74 @@ class MqttClientImpl(
         is PubRel -> onReceivePubRelAck(packet)
         is PubComp -> onReceivePubComp(packet)
         is SubAck -> onReceiveSubAck(packet)
+        is UnsubAck -> onReceiveUnsubAck(packet)
         else -> println("Client can handle this packet: $packet")
+    }
+
+    private fun onReceiveUnsubAck(packet: UnsubAck) {
+        session.popPendingSentNotAck<Unsubscribe> { it.messageId == packet.messageId }
+            ?.let { callbackRegistry.unsubscribeCallback?.invoke(it) }
     }
 
     private fun onReceivePubComp(packet: PubComp) {
         // remove pubrec
-        clientSession.popPendingReceivedNotAck<PubRec> { it.messageId == packet.messageId }
-        val publish = clientSession.popPendingSentNotAck<Publish> { it.message.messageId == packet.messageId }
+        session.popPendingReceivedNotAck<PubRec> { it.messageId == packet.messageId }
+        val publish = session.popPendingSentNotAck<Publish> { it.message.messageId == packet.messageId }
         if (publish != null) {
-            deliveryCallbacks.forEach { it.onDeliveryCompleted(publish.message) }
+            callbackRegistry.deliveryCompletedCallback?.invoke(publish.message)
         }
     }
 
     private fun onReceivePublish(publish: Publish) = when (publish.qos) {
-        QoS.Q0 -> subscribeCallbacks.forEach { it.onMessageReceived(publish.message) }
+        QoS.Q0 -> callbackRegistry.messageReceivedCallback?.invoke(publish.message)
         QoS.Q1 -> {
-            subscribeCallbacks.forEach { it.onMessageReceived(publish.message) }
+            callbackRegistry.messageReceivedCallback?.invoke(publish.message)
             outgoingQueue += PubAck(publish.message.messageId)
         }
         QoS.Q2 -> {
-            clientSession pushPendingReceivedNotAck publish
+            session pushPendingReceivedNotAck publish
             outgoingQueue += PubRec(publish.message.messageId)
         }
     }
 
     private fun onReceivePubAck(packet: PubAck) {
-        val publish = clientSession.popPendingSentNotAck<Publish> { it.message.messageId == packet.messageId }
-        if (publish != null)
-            deliveryCallbacks.forEach { it.onDeliveryCompleted(publish.message) }
+        session.popPendingSentNotAck<Publish> { it.message.messageId == packet.messageId }
+            ?.let { callbackRegistry.deliveryCompletedCallback?.invoke(it.message) }
     }
 
     private fun onReceivePubRec(packet: PubRec) {
-        val publish = clientSession.popPendingSentNotAck<Publish> { it.message.messageId == packet.messageId }
+        val publish = session.popPendingSentNotAck<Publish> { it.message.messageId == packet.messageId }
         if (publish != null) {
-            clientSession.pushPendingSentNotAck(publish)
-            clientSession.pushPendingReceivedNotAck(packet)
+            session.pushPendingSentNotAck(publish)
+            session.pushPendingReceivedNotAck(packet)
             outgoingQueue += PubRel(packet.messageId)
         }
     }
 
     private fun onReceivePubRelAck(packet: PubRel) {
-        clientSession.popPendingReceivedNotAck<Publish> { it.message.messageId == packet.messageId }
+        session.popPendingReceivedNotAck<Publish> { it.message.messageId == packet.messageId }
             ?.let { publish ->
                 outgoingQueue += PubComp(packet.messageId)
-                subscribeCallbacks.forEach { it.onMessageReceived(publish.message) }
+                callbackRegistry.messageReceivedCallback?.invoke(publish.message)
             }
     }
 
     private fun onReceiveSubAck(packet: SubAck) {
-        clientSession.popPendingSentNotAck<Subscribe> { it.messageId == packet.messageId }
+        session.popPendingSentNotAck<Subscribe> { it.messageId == packet.messageId }
             ?.let { subscribe ->
-                subscribeCallbacks.forEach { it.onSubscribeCompleted(subscribe) }
+                callbackRegistry.subscribeCompletedCallback?.invoke(subscribe)
             }
     }
 
     private suspend fun sendPendingQueue() {
         val toRemove = outgoingQueue.filter { transport.writePacket(it).isSuccess }
-        val newSession = toRemove.filter { it.qos > QoS.Q0 }.fold(clientSession) { session, packet ->
+        val newSession = toRemove.filter { it.qos > QoS.Q0 }.fold(session) { session, packet ->
             session pushPendingSentNotAck packet
             session
         }
 
         // set the session and clear packets from the send pending queue
-        clientSession = newSession
+        session = newSession
         outgoingQueue -= toRemove
     }
 }

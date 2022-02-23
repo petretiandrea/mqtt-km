@@ -19,5 +19,7 @@ interface Transport {
     @ExperimentalUnsignedTypes
     companion object {
         fun tcp(): Transport = TransportTCP()
+        fun ssl(): Transport = TODO("SSL ACTUALLY NOT IMPLEMENTED")
+        fun websocket(): Transport = TODO("WEBSOCKET ACTUALLY NOT IMPLEMENTED")
     }
 }

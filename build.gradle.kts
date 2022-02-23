@@ -11,9 +11,13 @@ repositories {
     mavenCentral()
     maven(url = "https://h1.danbrough.org/maven/")
     maven(url = "https://jitpack.io")
+    maven(url = "https://repo.repsy.io/mvn/chrynan/public")
 }
 
 kotlin {
+
+    val compilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
+
 //    jvm {
 //        compilations.all {
 //            kotlinOptions.jvmTarget = "1.8"
@@ -22,7 +26,6 @@ kotlin {
 //            useJUnitPlatform()
 //        }
 //    }
-
     kotlin.targets.withType(KotlinNativeTarget::class.java) {
         binaries.all {
             binaryOptions["memoryModel"] = "experimental"
@@ -38,6 +41,11 @@ kotlin {
     }
 //    linuxX64()
     sourceSets {
+        
+        all {
+            languageSettings.optIn("kotlin.ExperimentalUnsignedTypes")
+        }
+
         val commonMain by getting {
             dependencies {
                 implementation(kotlin("stdlib-common"))

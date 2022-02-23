@@ -1,18 +1,10 @@
 import io.github.petretiandrea.mqtt.MqttClientImpl
-import io.github.petretiandrea.mqtt.SubscribeCallback
 import io.github.petretiandrea.mqtt.core.ConnectionSettings
 import io.github.petretiandrea.mqtt.core.model.Message
 import io.github.petretiandrea.mqtt.core.model.packets.QoS
-import io.github.petretiandrea.mqtt.core.model.packets.Subscribe
-import io.github.petretiandrea.mqtt.core.model.packets.Unsubscribe
 import io.github.petretiandrea.mqtt.core.session.ClientSession
-import io.github.petretiandrea.mqtt.core.transport.BufferedPacketReader
-import io.github.petretiandrea.mqtt.core.transport.DefaultBufferedPacketReader
 import io.github.petretiandrea.mqtt.core.transport.Transport
-import io.github.petretiandrea.socket.buffer.allocMultiplatformBuffer
-import io.github.petretiandrea.socket.createSocket
-import io.github.petretiandrea.socket.stream.BufferedInputStream.Companion.buffered
-import kotlinx.coroutines.*
+import kotlinx.coroutines.runBlocking
 
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
@@ -38,25 +30,20 @@ fun main() = runBlocking {
 
     mqtt.connect()
 
+    mqtt.onMessageReceived {
+        println("Received: $it")
+
+    }
+    mqtt.onSubscribeCompleted {
+        println("Completed subscribe to: ${it.topic}")
+    }
+
     val published = mqtt.publish(Message(1, "test/kotlin", "hello2", QoS.Q2, retain = false, duplicate = false))
     println(published)
 
+
     println(mqtt.subscribe("test/kotlin", QoS.Q2))
 
-    mqtt.registerSubscribeCallback(object : SubscribeCallback {
-        override suspend fun onSubscribeCompleted(subscribe: Subscribe) {
-            println("Completed subscribe to: ${subscribe.topic}")
-        }
-
-        override suspend fun onMessageReceived(message: Message) {
-            println("Received: $message")
-        }
-
-        override suspend fun onUnsubscribeCompleted(unsubscribe: Unsubscribe) {
-            TODO("Not yet implemented")
-        }
-
-    })
 
     Unit
 }

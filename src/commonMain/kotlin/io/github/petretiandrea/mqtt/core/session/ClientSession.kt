@@ -9,13 +9,6 @@ data class ClientSession(
     private var sentNotAck: List<MqttPacket> = emptyList(),
     private var receivedNotAck: List<MqttPacket> = emptyList()
 ) : Session {
-    override fun pushSentPacket(packet: MqttPacket): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun popSentPacket(filter: (MqttPacket) -> Boolean): MqttPacket? {
-        TODO("Not yet implemented")
-    }
 
     override fun pushPendingSentNotAck(packet: MqttPacket) {
         sentNotAck += packet
