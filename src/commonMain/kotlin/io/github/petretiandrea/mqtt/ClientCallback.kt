@@ -1,13 +1,14 @@
 package io.github.petretiandrea.mqtt
 
 import io.github.petretiandrea.mqtt.core.model.Message
+import io.github.petretiandrea.mqtt.core.model.packets.QoS
 import io.github.petretiandrea.mqtt.core.model.packets.Subscribe
 import io.github.petretiandrea.mqtt.core.model.packets.Unsubscribe
 
 interface ClientCallback {
     suspend fun onMessageReceived(callback: (Message) -> Unit)
     suspend fun onDeliveryCompleted(callback: (Message) -> Unit)
-    suspend fun onSubscribeCompleted(callback: (Subscribe) -> Unit)
+    suspend fun onSubscribeCompleted(callback: (Subscribe, QoS) -> Unit)
     suspend fun onLostConnection(callback: (Exception) -> Unit)
     suspend fun onDisconnect(callback: (Exception?) -> Unit)
     suspend fun onUnsubscribeComplete(callback: (Unsubscribe) -> Unit)
@@ -23,7 +24,7 @@ interface ClientCallback {
 internal class CallbackRegistry(
     internal var messageReceivedCallback : ((Message) -> Unit)? = null,
     internal var deliveryCompletedCallback: ((Message) -> Unit)? = null,
-    internal var subscribeCompletedCallback: ((Subscribe) -> Unit)? = null,
+    internal var subscribeCompletedCallback: ((Subscribe, QoS) -> Unit)? = null,
     internal var lostConnectionCallback: ((Exception) -> Unit)? = null,
     internal var disconnectCallback: ((Exception?) -> Unit)? = null,
     internal var unsubscribeCallback: ((Unsubscribe) -> Unit)? = null
@@ -36,7 +37,7 @@ internal class CallbackRegistry(
         deliveryCompletedCallback = callback
     }
 
-    override suspend fun onSubscribeCompleted(callback: (Subscribe) -> Unit) {
+    override suspend fun onSubscribeCompleted(callback: (Subscribe, QoS) -> Unit) {
         subscribeCompletedCallback = callback
     }
 

@@ -34,8 +34,8 @@ fun main() = runBlocking {
         println("Received: $it")
 
     }
-    mqtt.onSubscribeCompleted {
-        println("Completed subscribe to: ${it.topic}")
+    mqtt.onSubscribeCompleted { subscription, _ ->
+        println("Completed subscribe to: ${subscription.topic}")
     }
 
     val published = mqtt.publish(Message(1, "test/kotlin", "hello2", QoS.Q2, retain = false, duplicate = false))

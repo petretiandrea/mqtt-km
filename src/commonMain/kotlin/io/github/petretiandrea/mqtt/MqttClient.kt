@@ -98,6 +98,7 @@ internal class MqttClientImpl constructor(
             transport.writePacket(Disconnect)
             eventLoop?.cancel("Disconnected by user")
             eventLoop?.join()
+            transport.close()
         }
         return Result.success(Unit)
     }
@@ -203,7 +204,7 @@ internal class MqttClientImpl constructor(
     private fun onReceiveSubAck(packet: SubAck) {
         session.popPendingSentNotAck<Subscribe> { it.messageId == packet.messageId }
             ?.let { subscribe ->
-                callbackRegistry.subscribeCompletedCallback?.invoke(subscribe)
+                callbackRegistry.subscribeCompletedCallback?.invoke(subscribe, packet.grantedQos)
             }
     }
 

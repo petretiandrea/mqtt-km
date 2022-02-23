@@ -1,25 +1,15 @@
 package io.github.petretiandrea
 
+import io.github.petretiandrea.AsyncTest.collectCallback
 import io.github.petretiandrea.AsyncTest.waitCallback
+import io.github.petretiandrea.TestCollection.assertContentEqualsIgnoreOrder
 import io.github.petretiandrea.mqtt.MqttClient
-import io.github.petretiandrea.mqtt.MqttClientImpl
 import io.github.petretiandrea.mqtt.core.ConnectionSettings
-import io.github.petretiandrea.mqtt.core.MqttVersion
 import io.github.petretiandrea.mqtt.core.model.Message
 import io.github.petretiandrea.mqtt.core.model.MessageId
 import io.github.petretiandrea.mqtt.core.model.packets.*
-import io.github.petretiandrea.mqtt.core.session.ClientSession
-import io.github.petretiandrea.mqtt.core.transport.Transport
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.callbackFlow
-import platform.posix.time
-import kotlin.native.concurrent.Future
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.time.Duration
+import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -27,7 +17,6 @@ import kotlin.time.Duration.Companion.seconds
 class MqttTest {
 
     private lateinit var client: MqttClient
-
 
     private fun teardown(): Unit = runBlocking {
         client.disconnect()
@@ -76,19 +65,14 @@ class MqttTest {
 
     @Test
     fun canReconnectToServer() = runBlocking {
-        client = createDefaultClient(this)
-        val connected = client.connect()
-        assert(connected.isSuccess) { "${connected.exceptionOrNull()}" }
-
-        delay(500)
+        client = createDefaultClient(this).apply { connect() }
+        delay(1000)
 
         val disconnected = client.disconnect()
         assert(disconnected.isSuccess) { "${disconnected.exceptionOrNull()}" }
 
         val reconnected = client.connect()
         assert(reconnected.isSuccess) { "${reconnected.exceptionOrNull()}" }
-
-        assert(client.disconnect().isSuccess)
 
         teardown()
     }
@@ -104,88 +88,55 @@ class MqttTest {
     }
 
     @Test
-    fun mustPublishWithQos0() = runBlocking {
+    fun mustPublishWithDifferentQos() = runBlocking {
         client = createDefaultClient(this).apply { connect() }
-        assert(
-            client.publish(Message(0, "test/kotlin", "hello", QoS.Q0, retain = false, duplicate = false))
-        )
-        teardown()
-    }
+        val messages = QoS.values()
+            .map { Message(MessageId.generate(), "test/kotlin", "hello", it, retain = false, duplicate = false) }
 
-    @Test
-    fun mustPublishWithQos1() = runBlocking {
-        client = createDefaultClient(this).apply { connect() }
-        val message = Message(MessageId.generate(), "test/kotlin", "hello", QoS.Q1, retain = false, duplicate = false)
-        val waitPublish = waitCallback<Message>(2.seconds) {
+        val waitResponses = collectCallback<Message>(2, 5.seconds) {
             client.onDeliveryCompleted { trySend(it) }
         }
+        // publish
+        val publishStates = messages.map { client.publish(it) }
+        val collectedAck = waitResponses()
 
-        assert(client.publish(message))
-        waitPublish().let {
-            assertEquals(message.topic, it.topic)
-            assertEquals(message.message, it.message)
-            assertEquals(message.qos, it.qos)
-        }
+        assert(publishStates.all { it })
+        assertContentEqualsIgnoreOrder(messages.drop(1), collectedAck)
 
         teardown()
     }
 
     @Test
-    fun mustPublishWithQos2() = runBlocking {
+    fun mustSubscribeToTopicWithDifferentQos() = runBlocking {
         client = createDefaultClient(this).apply { connect() }
-        val message = Message(MessageId.generate(), "test/kotlin", "hello", QoS.Q2, retain = false, duplicate = false)
-        val waitPublish = waitCallback<Message>(2.seconds) {
-            client.onDeliveryCompleted { trySend(it) }
+        val topics = QoS.values().map { it to "test/kotlin${it.ordinal}" }.toList()
+        val waitResponses = collectCallback<Pair<Subscribe, QoS>>(3, 5.seconds) {
+            client.onSubscribeCompleted { subscribe, grantedQos ->
+                trySend(subscribe to grantedQos)
+            }
         }
 
-        assert(client.publish(message))
-        waitPublish().let {
-            assertEquals(message.topic, it.topic)
-            assertEquals(message.message, it.message)
-            assertEquals(message.qos, it.qos)
-        }
+        val published = topics.map { client.subscribe(it.second, it.first) }
+        val collectedAck = waitResponses().map { it.second to it.first.topic } // qos -> topic
 
+        assert(published.all { it })
+        assertContentEqualsIgnoreOrder(topics, collectedAck)
         teardown()
     }
 
     @Test
-    fun mustSubscribeToTopicQos0() = runBlocking {
-        client = createDefaultClient(this)
-        assert(client.subscribe("test/kotlin", QoS.Q0))
-
-        teardown()
-    }
-
-    @Test
-    fun mustSubscribeToTopicQos1() = runBlocking {
+    fun mustUnsubscribeFromTopic() = runBlocking {
         client = createDefaultClient(this).apply { connect() }
         val topic = "test/kotlin"
-        val waitSubscribe = waitCallback<Subscribe>(timeout = 2.seconds) {
-            client.onSubscribeCompleted {
+        val waitUnsubscribe = waitCallback<Unsubscribe>(3.seconds) {
+            client.onUnsubscribeComplete {
                 trySend(it)
             }
         }
-        assert(client.subscribe(topic, QoS.Q1))
-        val subscription = waitSubscribe()
-        assertEquals(topic, subscription.topic)
-        assertEquals(QoS.Q1, subscription.qos)
+
+        assert(client.unsubscribe(topic))
+        assertEquals(topic, waitUnsubscribe().topic)
+
         teardown()
     }
-
-    @Test
-    fun mustSubscribeToTopicQos2() = runBlocking {
-        client = createDefaultClient(this).apply { connect() }
-        val topic = "test/kotlin"
-        val waitSubscribe = waitCallback<Subscribe>(timeout = 2.seconds) {
-            client.onSubscribeCompleted {
-                trySend(it)
-            }
-        }
-        assert(client.subscribe(topic, QoS.Q2))
-        val subscription = waitSubscribe()
-        assertEquals(topic, subscription.topic)
-        assertEquals(QoS.Q2, subscription.qos)
-        teardown()
-    }
-
 }
