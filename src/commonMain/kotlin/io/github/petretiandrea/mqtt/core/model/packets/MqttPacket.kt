@@ -18,6 +18,7 @@ sealed interface MqttPacket {
                 Type.PUBREC -> PubRec.fromByteArray(body)
                 Type.PUBREL -> PubRel.fromByteArray(body)
                 Type.PUBCOMP -> PubComp.fromByteArray(body)
+                Type.PUBLISH -> Publish.fromByteArray(ubyteArrayOf(header) + body)
                 Type.SUBACK -> SubAck.fromByteArray(body)
                 Type.UNSUBACK -> UnsubAck.fromByteArray(body)
                 Type.PINGREQ -> Result.success(PingReq)

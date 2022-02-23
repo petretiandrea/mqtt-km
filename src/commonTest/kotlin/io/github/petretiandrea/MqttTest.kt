@@ -44,7 +44,6 @@ class MqttTest {
                 transport = Transport.tcp(),
                 connectionSettings = SETTINGS.copy(keepAliveSeconds = keepAliveSeconds),
                 scope = scope,
-                dispatcher = Dispatchers.Default,
                 session = ClientSession(SETTINGS.clientId, SETTINGS.cleanSession)
             )
         }
@@ -112,7 +111,9 @@ class MqttTest {
     @Test
     fun mustSubscribeToTopic() = runBlocking {
         client = createDefaultClient(this)
+        client.subscribe("test/kotlin", QoS.Q0)
 
+        client.publish(Message(0, "test/kotlin", "ciaooo", QoS.Q0, false, false))
 
         teardown()
     }

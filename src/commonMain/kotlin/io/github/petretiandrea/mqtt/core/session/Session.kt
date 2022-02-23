@@ -7,9 +7,12 @@ interface Session {
     val clientId: String
     val cleanSession: Boolean
 
-    infix fun addPendingSentNotAck(packet: MqttPacket): Session
-    infix fun addPendingReceivedNotAck(packet: MqttPacket): Session
+    infix fun pushSentPacket(packet: MqttPacket): Boolean
+    fun popSentPacket(filter: (MqttPacket) -> Boolean): MqttPacket?
 
-    fun removePendingSendNotAck(filter: (MqttPacket) -> Boolean): Session
-    fun removePendingReceivedNotAck(filter: (MqttPacket) -> Boolean): Session
+    infix fun pushPendingSentNotAck(packet: MqttPacket)
+    infix fun pushPendingReceivedNotAck(packet: MqttPacket)
+
+    fun <T : MqttPacket> popPendingReceivedNotAck(filter: (T) -> Boolean = { true }): T?
+    fun <T : MqttPacket> popPendingSentNotAck(filter: (T) -> Boolean = { true }): T?
 }

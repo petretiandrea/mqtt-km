@@ -1,14 +1,18 @@
 package io.github.petretiandrea.mqtt.core.model
 
-import kotlin.experimental.and
-
-
 object Extension {
     fun MutableList<Byte>.writeString(string: String) {
         add((string.length shr 8).toByte())
         add((string.length and 0xFF).toByte())
         // UTF-8 encoding
         string.encodeToByteArray().forEach { add(it) }
+    }
+
+    fun MutableList<UByte>.writeStringU(string: String) {
+        add((string.length shr 8).toUByte())
+        add((string.length and 0xFF).toUByte())
+        // UTF-8 encoding
+        string.encodeToByteArray().forEach { add(it.toUByte()) }
     }
 }
 

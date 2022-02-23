@@ -6,19 +6,34 @@ import io.github.petretiandrea.mqtt.core.model.packets.MqttPacket
 data class ClientSession(
     override val clientId: String,
     override val cleanSession: Boolean,
-    private val sentNotAck: List<MqttPacket> = emptyList(),
-    private val receivedNotAck: List<MqttPacket> = emptyList()
+    private var sentNotAck: List<MqttPacket> = emptyList(),
+    private var receivedNotAck: List<MqttPacket> = emptyList()
 ) : Session {
+    override fun pushSentPacket(packet: MqttPacket): Boolean {
+        TODO("Not yet implemented")
+    }
 
-    override fun addPendingSentNotAck(packet: MqttPacket): Session =
-        this.copy(sentNotAck = sentNotAck + packet)
+    override fun popSentPacket(filter: (MqttPacket) -> Boolean): MqttPacket? {
+        TODO("Not yet implemented")
+    }
 
-    override fun addPendingReceivedNotAck(packet: MqttPacket): Session =
-        this.copy(receivedNotAck = sentNotAck + packet)
+    override fun pushPendingSentNotAck(packet: MqttPacket) {
+        sentNotAck += packet
+    }
 
-    override fun removePendingSendNotAck(filter: (MqttPacket) -> Boolean): Session =
-        this.copy(sentNotAck = sentNotAck.filter { !filter(it) })
+    override fun pushPendingReceivedNotAck(packet: MqttPacket) {
+        receivedNotAck += packet
+    }
 
-    override fun removePendingReceivedNotAck(filter: (MqttPacket) -> Boolean): Session =
-        this.copy(sentNotAck = receivedNotAck.filter { !filter(it) })
+    override fun <T : MqttPacket> popPendingReceivedNotAck(filter: (T) -> Boolean): T? {
+        return receivedNotAck.mapNotNull { it as? T }.firstOrNull(filter)?.also {
+            receivedNotAck -= it
+        }
+    }
+
+    override fun <T : MqttPacket> popPendingSentNotAck(filter: (T) -> Boolean): T? {
+        return sentNotAck.mapNotNull { it as? T }.firstOrNull(filter)?.also {
+            sentNotAck -= it
+        }
+    }
 }
