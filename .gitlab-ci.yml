@@ -2,15 +2,22 @@ stages:
   - build
   - test
 
-build-linux:
+build:
   stage: build
+  image: openjdk:11-jdk
   allow_failure: false
   when: manual
-  tags:
-    - linux
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+    - chmod +x ./gradlew
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
   script:
     ./gradlew mqtt-km:build
-
+  tags:
+    - linux
 
 test-linux:
   stage: test
