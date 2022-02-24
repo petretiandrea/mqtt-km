@@ -14,8 +14,6 @@ import io.github.petretiandrea.mqtt.core.transport.Transport
 import io.github.petretiandrea.socket.exception.SocketErrorReason
 import io.github.petretiandrea.socket.exception.SocketException
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.SharedFlow
 import kotlin.time.Duration.Companion.milliseconds
 
 interface MqttClient : ClientCallback {
@@ -65,7 +63,7 @@ internal class MqttClientImpl constructor(
         private set
 
     // TODO: implements using actors and channels
-    private val eventLoopContext = newSingleThreadContext("mqtt-eventloop")
+    private val eventLoopContext = io.github.petretiandrea.coroutines.newSingleThreadContext("mqtt-eventloop")
     private val pingHelper: PingHelper = PingHelper(connectionSettings.keepAliveSeconds * 1000L, transport)
     private var outgoingQueue = emptyList<MqttPacket>()
     private var eventLoop: Job? = null

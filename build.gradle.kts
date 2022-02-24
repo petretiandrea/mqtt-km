@@ -32,14 +32,10 @@ kotlin {
         }
     }
 
-    mingwX64 {
-        binaries {
-            executable {
-                entryPoint = "main"
-            }
-        }
-    }
-//    linuxX64()
+    mingwX64()
+    linuxX64()
+    linuxArm64()
+
     sourceSets {
         
         all {
@@ -50,8 +46,8 @@ kotlin {
             dependencies {
                 implementation(kotlin("stdlib-common"))
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-danbroid")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2-danbroid") // allow arm64 support
                 implementation("ru.pocketbyte.kydra:kydra-log:1.1.8")
             }
         }
@@ -83,7 +79,15 @@ kotlin {
             dependsOn(posixMain)
         }
         val mingwX64Test by getting
-//        val linuxX64Main by getting
-//        val linuxX64Test by getting
+
+        val linuxX64Main by getting {
+            dependsOn(posixMain)
+        }
+        val linuxX64Test by getting
+
+        val linuxArm64Main by getting {
+            dependsOn(posixMain)
+        }
+        val linuxArm64Test by getting
     }
 }

@@ -3,8 +3,6 @@ package io.github.petretiandrea.socket
 import io.github.petretiandrea.socket.exception.SocketException
 import kotlinx.cinterop.*
 import platform.posix.*
-import platform.windows.addrinfo
-import platform.windows.getaddrinfo
 
 actual fun connectSocket(
     hostname: String,
@@ -16,8 +14,8 @@ actual fun connectSocket(
 
         with(hints) {
             memset(this.ptr, 0, sizeOf<addrinfo>().toULong())
-            this.ai_family = platform.posix.AF_INET
-            this.ai_socktype = platform.posix.SOCK_STREAM
+            this.ai_family = AF_INET
+            this.ai_socktype = SOCK_STREAM
             this.ai_flags = 0
             this.ai_protocol = 0
         }
@@ -51,7 +49,7 @@ actual fun isSocketConnected(
 ): Boolean {
     return memScoped {
         val error = alloc<IntVar>()
-        val isConnected = getsockopt(socket.convert(), SOL_SOCKET, SO_ERROR, error.ptr.reinterpret(), sizeOf<IntVar>().toCPointer())
+        val isConnected = getsockopt(socket.convert(), SOL_SOCKET, SO_ERROR, error.ptr, sizeOf<IntVar>().toCPointer())
         error.value <= 0 && isConnected != 0
     }
 }
@@ -61,33 +59,33 @@ actual fun getMaxSendBuffer(
 ): Int {
     return memScoped {
         val value = alloc<IntVar>()
-        getsockopt(socket.convert(), SOL_SOCKET, SO_SNDBUF, value.ptr.reinterpret(), sizeOf<IntVar>().toCPointer())
+        getsockopt(socket.convert(), SOL_SOCKET, SO_SNDBUF, value.ptr, sizeOf<IntVar>().toCPointer())
         value.value
     }
 }
 
 actual fun shutdownInput(socket: Int) {
-    shutdown(socket.convert(), SD_RECEIVE)
+    shutdown(socket.convert(), SHUT_RD)
 }
 
 actual fun shutdownOutput(socket: Int) {
-    shutdown(socket.convert(), SD_SEND)
+    shutdown(socket.convert(), SHUT_WR)
 }
 
 actual fun send(socket: Int, buf: CValuesRef<ByteVar>?, len: Int, flags: Int): Int {
-    return platform.posix.send(socket.convert(), buf, len, flags)
+    return platform.posix.send(socket.convert(), buf, len.convert(), flags or MSG_NOSIGNAL).convert()
 }
 
 actual fun recv(socket: Int, buf: CValuesRef<ByteVar>?, len: Int, flags: Int): Int {
-    return platform.posix.recv(socket.convert(), buf, len, flags)
+    return platform.posix.recv(socket, buf, len.convert(), flags).convert()
 }
 
 actual fun shutdown(socket: Int): Int {
-    return platform.posix.shutdown(socket.convert(), platform.posix.SD_BOTH)
+    return shutdown(socket, SHUT_RDWR)
 }
 
 actual fun close(socket: Int): Int {
-    return platform.posix.closesocket(socket.convert())
+    return platform.posix.close(socket.convert())
 }
 
 actual fun memset(__s: CValuesRef<*>?, __c: Int, __n: ULong): CPointer<out CPointed>? {
@@ -95,7 +93,7 @@ actual fun memset(__s: CValuesRef<*>?, __c: Int, __n: ULong): CPointer<out CPoin
 }
 
 actual fun socket(__domain: Int, __type: Int, __protocol: Int): Int {
-    return platform.posix.socket(__domain, __type, __protocol).toInt()
+    return platform.posix.socket(__domain, __type, __protocol)
 }
 
 actual fun MemScope.select(
@@ -107,14 +105,9 @@ actual fun MemScope.select(
 ): Int {
     val timeoutStruct = alloc<timeval>()
     timeoutStruct.tv_sec = 0
-    timeoutStruct.tv_usec = (timeout * 1000).toInt()
-    return platform.windows.select(__nfds, __readfds, __writefds, __exceptfds, timeoutStruct.ptr)
+    timeoutStruct.tv_usec = timeout * 1000
+    return select(__nfds, __readfds, __writefds, __exceptfds, timeoutStruct.ptr)
 }
 
-actual fun socketsInit() {
-   memScoped { init_sockets() }
-}
-
-actual fun socketsCleanup() {
-    memScoped { deinit_sockets() }
-}
+actual fun socketsInit() {}
+actual fun socketsCleanup() {}
