@@ -16,7 +16,7 @@ build:
       - .gradle/wrapper
       - .gradle/caches
   script:
-    ./gradlew build
+    ./gradlew assemble
   tags:
     - linux
 
