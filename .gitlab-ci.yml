@@ -7,7 +7,7 @@ build-linux:
   allow_failure: false
   when: manual
   tags:
-    - linuxX64
+    - linux
   script:
     ./gradlew mqtt-km:build
 
