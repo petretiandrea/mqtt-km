@@ -11,11 +11,12 @@ build:
     - export GRADLE_USER_HOME=`pwd`/.gradle
     - chmod +x ./gradlew
   cache:
+    key: $CI_PROJECT_NAME
     paths:
       - .gradle/wrapper
       - .gradle/caches
   script:
-    ./gradlew build --info
+    ./gradlew build
   tags:
     - linux
 
