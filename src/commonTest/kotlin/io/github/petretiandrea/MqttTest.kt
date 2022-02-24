@@ -8,6 +8,8 @@ import io.github.petretiandrea.mqtt.core.ConnectionSettings
 import io.github.petretiandrea.mqtt.core.model.Message
 import io.github.petretiandrea.mqtt.core.model.MessageId
 import io.github.petretiandrea.mqtt.core.model.packets.*
+import io.github.petretiandrea.mqtt.dsl.mqtt
+import io.github.petretiandrea.mqtt.dsl.tcp
 import kotlinx.coroutines.*
 import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds
@@ -22,22 +24,15 @@ class MqttTest {
     }
 
     companion object {
-        val SETTINGS = ConnectionSettings(
-            hostname = "broker.hivemq.com",
-            port = 1883,
-            clientId = "test-km",
-            username = null,
-            password = null,
-            cleanSession = true,
-            willMessage = null,
-            keepAliveSeconds = 5
-        )
-
         fun createDefaultClient(scope: CoroutineScope, keepAliveSeconds: Int = 10): MqttClient {
-            return MqttClient(
-                scope,
-                SETTINGS.copy(keepAliveSeconds = keepAliveSeconds),
-            )
+            return mqtt(scope) {
+                tcp {
+                    hostname = "broker.hivemq.com"
+                    port = 1883
+                    clientId = "test-km"
+                    keepAlive = keepAliveSeconds.seconds
+                }
+            }
         }
     }
 

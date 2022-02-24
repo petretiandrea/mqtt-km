@@ -32,7 +32,7 @@ interface MqttClient : ClientCallback {
         operator fun invoke(
             scope: CoroutineScope,
             connectionSettings: ConnectionSettings,
-            session: Session = ClientSession(connectionSettings.clientId, connectionSettings.cleanSession)
+            session: Session = ClientSession(connectionSettings.clientId, connectionSettings.cleanSession),
         ): MqttClient {
             return MqttClientImpl(
                 connectionSettings = connectionSettings,

@@ -6,12 +6,12 @@ import io.github.petretiandrea.mqtt.core.model.packets.Subscribe
 import io.github.petretiandrea.mqtt.core.model.packets.Unsubscribe
 
 interface ClientCallback {
-    suspend fun onMessageReceived(callback: (Message) -> Unit)
-    suspend fun onDeliveryCompleted(callback: (Message) -> Unit)
-    suspend fun onSubscribeCompleted(callback: (Subscribe, QoS) -> Unit)
-    suspend fun onLostConnection(callback: (Exception) -> Unit)
-    suspend fun onDisconnect(callback: (Exception?) -> Unit)
-    suspend fun onUnsubscribeComplete(callback: (Unsubscribe) -> Unit)
+    fun onMessageReceived(callback: (Message) -> Unit)
+    fun onDeliveryCompleted(callback: (Message) -> Unit)
+    fun onSubscribeCompleted(callback: (Subscribe, QoS) -> Unit)
+    fun onLostConnection(callback: (Exception) -> Unit)
+    fun onDisconnect(callback: (Exception?) -> Unit)
+    fun onUnsubscribeComplete(callback: (Unsubscribe) -> Unit)
 
     companion object {
         internal fun registry(): CallbackRegistry = CallbackRegistry()
@@ -29,27 +29,27 @@ internal class CallbackRegistry(
     internal var disconnectCallback: ((Exception?) -> Unit)? = null,
     internal var unsubscribeCallback: ((Unsubscribe) -> Unit)? = null
 ) : ClientCallback {
-    override suspend fun onMessageReceived(callback: (Message) -> Unit) {
+    override fun onMessageReceived(callback: (Message) -> Unit) {
         messageReceivedCallback = callback
     }
 
-    override suspend fun onDeliveryCompleted(callback: (Message) -> Unit) {
+    override fun onDeliveryCompleted(callback: (Message) -> Unit) {
         deliveryCompletedCallback = callback
     }
 
-    override suspend fun onSubscribeCompleted(callback: (Subscribe, QoS) -> Unit) {
+    override fun onSubscribeCompleted(callback: (Subscribe, QoS) -> Unit) {
         subscribeCompletedCallback = callback
     }
 
-    override suspend fun onLostConnection(callback: (Exception) -> Unit) {
+    override fun onLostConnection(callback: (Exception) -> Unit) {
         lostConnectionCallback = callback
     }
 
-    override suspend fun onDisconnect(callback: (Exception?) -> Unit) {
+    override fun onDisconnect(callback: (Exception?) -> Unit) {
         disconnectCallback = callback
     }
 
-    override suspend fun onUnsubscribeComplete(callback: (Unsubscribe) -> Unit) {
+    override fun onUnsubscribeComplete(callback: (Unsubscribe) -> Unit) {
         unsubscribeCallback = callback
     }
 }
