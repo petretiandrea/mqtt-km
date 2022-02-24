@@ -15,11 +15,11 @@ build:
       - .gradle/wrapper
       - .gradle/caches
   script:
-    ./gradlew mqtt-km:build
+    ./gradlew build --info
   tags:
     - linux
 
 test-linux:
   stage: test
   script:
-    ./gradlew mqtt-km:jvmTest
+    ./gradlew jvmTest
