@@ -159,7 +159,6 @@ internal class MqttClientImpl constructor(
     }
 
     private fun onReceivePubComp(packet: PubComp) {
-        // remove pubrec
         session.popPendingReceivedNotAck<PubRec> { it.messageId == packet.messageId }
         val publish = session.popPendingSentNotAck<Publish> { it.message.messageId == packet.messageId }
         if (publish != null) {

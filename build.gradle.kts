@@ -15,17 +15,17 @@ repositories {
 }
 
 kotlin {
-
     val compilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
 
-//    jvm {
-//        compilations.all {
-//            kotlinOptions.jvmTarget = "1.8"
-//        }
+    jvm {
+        compilations.all {
+            kotlinOptions.jvmTarget = "1.8"
+        }
 //        testRuns["test"].executionTask.configure {
 //            useJUnitPlatform()
 //        }
-//    }
+    }
+
     kotlin.targets.withType(KotlinNativeTarget::class.java) {
         binaries.all {
             binaryOptions["memoryModel"] = "experimental"
@@ -67,12 +67,17 @@ kotlin {
         }
         val posixTest by creating
 
-//        val jvmMain by getting {
-//            dependencies {
-//                implementation(kotlin("stdlib-jdk8"))
-//            }
-//        }
-//        val jvmTest by getting
+        val jvmMain by getting {
+            dependencies {
+                implementation(kotlin("stdlib-jdk8"))
+            }
+        }
+        val jvmTest by getting {
+            dependencies {
+                implementation(kotlin("test-junit"))
+                implementation("junit:junit:4.13.2")
+            }
+        }
 
         val mingwX64Main by getting {
             dependsOn(posixMain)

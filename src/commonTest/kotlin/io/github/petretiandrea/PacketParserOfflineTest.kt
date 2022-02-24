@@ -2,12 +2,10 @@ package io.github.petretiandrea
 
 import io.github.petretiandrea.mqtt.core.MqttVersion
 import io.github.petretiandrea.mqtt.core.model.ConnectionStatus
-import io.github.petretiandrea.mqtt.core.model.Util
 import io.github.petretiandrea.mqtt.core.model.packets.*
-import platform.windows.byte
-import kotlin.experimental.and
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @ExperimentalUnsignedTypes
 class PacketParserOfflineTest {
@@ -16,7 +14,7 @@ class PacketParserOfflineTest {
     fun canSerializeDeserializeFixedHeader(){
         val header = FixedHeader(Type.CONNECT, false, QoS.Q0, false)
         val bytes = header.toByteArray(0)
-        assert(bytes.isNotEmpty())
+        assertTrue(bytes.isNotEmpty())
         val parsedHeader = FixedHeader.fromByte(bytes[0].toUByte()).getOrNull()
         assertEquals(header, parsedHeader)
     }
@@ -28,7 +26,7 @@ class PacketParserOfflineTest {
             connectionStatus = ConnectionStatus.ACCEPT
         )
         val bytes = connAck.toByteArray().let { it.copyOfRange(2, it.size) }
-        assert(bytes.isNotEmpty())
+        assertTrue(bytes.isNotEmpty())
         val parsedAck = ConnAck.fromByteArray(bytes).getOrNull()
         assertEquals(connAck, parsedAck)
     }
@@ -44,7 +42,7 @@ class PacketParserOfflineTest {
             keepAliveSeconds = 2,
             willMessage = null
         )
-        assert(connect.toByteArray().isNotEmpty())
+        assertTrue(connect.toByteArray().isNotEmpty())
     }
 
     @Test

@@ -12,7 +12,6 @@ import kotlinx.coroutines.*
 import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds
 
-
 @ExperimentalUnsignedTypes
 class MqttTest {
 
@@ -46,8 +45,8 @@ class MqttTest {
     fun canConnectToServer() = runBlocking {
         client = createDefaultClient(this)
         val connected = client.connect()
-        assert(connected.isSuccess) { "${connected.exceptionOrNull()}" }
-        assert(client.isConnected)
+        assertTrue(connected.isSuccess, "${connected.exceptionOrNull()}" )
+        assertTrue(client.isConnected)
 
         teardown()
     }
@@ -57,8 +56,8 @@ class MqttTest {
         client = createDefaultClient(this)
         client.connect()
 
-        assert(client.disconnect().isSuccess)
-        assert(!client.isConnected)
+        assertTrue(client.disconnect().isSuccess)
+        assertTrue(!client.isConnected)
 
         teardown()
     }
@@ -69,10 +68,10 @@ class MqttTest {
         delay(1000)
 
         val disconnected = client.disconnect()
-        assert(disconnected.isSuccess) { "${disconnected.exceptionOrNull()}" }
+        assertTrue(disconnected.isSuccess, "${disconnected.exceptionOrNull()}")
 
         val reconnected = client.connect()
-        assert(reconnected.isSuccess) { "${reconnected.exceptionOrNull()}" }
+        assertTrue(reconnected.isSuccess, "${reconnected.exceptionOrNull()}")
 
         teardown()
     }
@@ -81,8 +80,8 @@ class MqttTest {
     fun mustKeepConnectionActive() = runBlocking {
         client = createDefaultClient(this, 2).apply { connect() }
         delay(10000)
-        assert(client.isConnected)
-        assert(client.disconnect().isSuccess)
+        assertTrue(client.isConnected)
+        assertTrue(client.disconnect().isSuccess)
 
         teardown()
     }
@@ -100,7 +99,7 @@ class MqttTest {
         val publishStates = messages.map { client.publish(it) }
         val collectedAck = waitResponses()
 
-        assert(publishStates.all { it })
+        assertTrue(publishStates.all { it })
         assertContentEqualsIgnoreOrder(messages.drop(1), collectedAck)
 
         teardown()
@@ -119,7 +118,7 @@ class MqttTest {
         val published = topics.map { client.subscribe(it.second, it.first) }
         val collectedAck = waitResponses().map { it.second to it.first.topic } // qos -> topic
 
-        assert(published.all { it })
+        assertTrue(published.all { it })
         assertContentEqualsIgnoreOrder(topics, collectedAck)
         teardown()
     }
@@ -134,7 +133,7 @@ class MqttTest {
             }
         }
 
-        assert(client.unsubscribe(topic))
+        assertTrue(client.unsubscribe(topic))
         assertEquals(topic, waitUnsubscribe().topic)
 
         teardown()

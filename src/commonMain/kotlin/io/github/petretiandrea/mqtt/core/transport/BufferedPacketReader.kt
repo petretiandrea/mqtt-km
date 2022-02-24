@@ -4,7 +4,6 @@ import io.github.petretiandrea.mqtt.core.model.packets.FixedHeader
 import io.github.petretiandrea.mqtt.core.model.packets.MqttPacket
 import io.github.petretiandrea.socket.buffer.allocMultiplatformBuffer
 import io.github.petretiandrea.socket.stream.BufferedInputStream
-import platform.posix.time
 import kotlin.time.Duration
 
 

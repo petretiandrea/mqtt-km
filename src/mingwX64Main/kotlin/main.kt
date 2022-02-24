@@ -43,7 +43,4 @@ fun main() = runBlocking {
 
 
     println(mqtt.subscribe("test/kotlin", QoS.Q2))
-
-
-    Unit
 }

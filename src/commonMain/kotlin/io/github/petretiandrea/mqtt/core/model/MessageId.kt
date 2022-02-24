@@ -1,5 +1,7 @@
 package io.github.petretiandrea.mqtt.core.model
 
+import kotlin.native.concurrent.ThreadLocal
+
 @ThreadLocal
 object MessageId {
     private var lastGenerated = 0
