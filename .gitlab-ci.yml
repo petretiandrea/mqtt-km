@@ -2,9 +2,10 @@ stages:
   - build
   - test
 
+image: openjdk:11-jdk
+
 build:
   stage: build
-  image: openjdk:11-jdk
   allow_failure: false
   when: manual
   before_script:
@@ -20,7 +21,17 @@ build:
   tags:
     - linux
 
+test-jvm:
+  stage: test
+  allow_failure: false
+  when: manual
+  script:
+    - ./gradlew mqtt-km:jvmTest
+    - ./gradlew mqtt-km:linuxX64Test
+
 test-linux:
   stage: test
+  allow_failure: false
+  when: manual
   script:
-    ./gradlew mqtt-km:jvmTest
+    - ./gradlew mqtt-km:linuxX64Test
