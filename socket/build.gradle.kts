@@ -25,7 +25,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(kotlin("stdlib-common"))
-                implementation("ru.pocketbyte.kydra:kydra-log:1.1.8")
+                implementation("ru.pocketbyte.kydra:kydra-log:${Deps.kydraVersion}")
             }
         }
         val commonTest by getting {
@@ -48,7 +48,7 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 implementation(kotlin("test-junit"))
-                implementation("junit:junit:4.13.2")
+                implementation("junit:junit:${Deps.junit}")
             }
         }
 

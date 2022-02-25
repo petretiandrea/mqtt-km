@@ -39,10 +39,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(kotlin("stdlib-common"))
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-danbroid")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2-danbroid") // allow arm64 support
-                implementation("ru.pocketbyte.kydra:kydra-log:1.1.8")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${Deps.kotlinSerialization}")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Deps.kotlinCoroutines}")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:${Deps.kotlinDateTime}") // allow arm64 support
+                implementation("ru.pocketbyte.kydra:kydra-log:${Deps.kydraVersion}")
                 implementation(project(":socket"))
             }
         }
@@ -66,7 +66,7 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 implementation(kotlin("test-junit"))
-                implementation("junit:junit:4.13.2")
+                implementation("junit:junit:${Deps.junit}")
             }
         }
 
