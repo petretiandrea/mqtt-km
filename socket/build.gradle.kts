@@ -1,28 +1,14 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-
 plugins {
     kotlin("multiplatform")
-    id("org.jetbrains.kotlinx.kover") version "0.5.0"
 }
 
 group = "io.github.petretiandrea"
 version = "1.0-SNAPSHOT"
 
 kotlin {
-    val compilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
-
     jvm {
         compilations.all {
             kotlinOptions.jvmTarget = "1.8"
-        }
-//        testRuns["test"].executionTask.configure {
-//            useJUnitPlatform()
-//        }
-    }
-
-    kotlin.targets.withType(KotlinNativeTarget::class.java) {
-        binaries.all {
-            binaryOptions["memoryModel"] = "experimental"
         }
     }
 
@@ -39,8 +25,6 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(kotlin("stdlib-common"))
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-danbroid")
                 implementation("ru.pocketbyte.kydra:kydra-log:1.1.8")
             }
         }
