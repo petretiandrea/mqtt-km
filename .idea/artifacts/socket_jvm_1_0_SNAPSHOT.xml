@@ -1,0 +1,6 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="socket-jvm-1.0-SNAPSHOT">
+    <output-path>D:\Projects\IntelliJProject\mqtt-km\socket\build\libs</output-path>
+    <root id="archive" name="socket-jvm-1.0-SNAPSHOT.jar" />
+  </artifact>
+</component>

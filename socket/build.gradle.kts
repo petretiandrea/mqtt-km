@@ -41,9 +41,7 @@ kotlin {
                 implementation(kotlin("stdlib-common"))
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-danbroid")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2-danbroid") // allow arm64 support
                 implementation("ru.pocketbyte.kydra:kydra-log:1.1.8")
-                implementation(project(":socket"))
             }
         }
         val commonTest by getting {
@@ -84,12 +82,5 @@ kotlin {
             dependsOn(posixMain)
         }
         val linuxArm64Test by getting
-    }
-}
-
-tasks.withType<Test> {
-    extensions.configure(kotlinx.kover.api.KoverTaskExtension::class) {
-        isDisabled = false
-        binaryReportFile.set(file("$buildDir/custom/result.bin"))
     }
 }
