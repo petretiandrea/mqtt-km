@@ -1,3 +1,3 @@
 
-rootProject.name = "mqtt-km"
-
+include(":mqtt-km")
+project(":mqtt-km").projectDir = File(settingsDir, "./mqtt-km/")
