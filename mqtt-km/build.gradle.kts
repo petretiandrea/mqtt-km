@@ -3,21 +3,19 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 plugins {
     kotlin("multiplatform")
     id("org.jetbrains.kotlinx.kover") version "0.5.0"
+
+    id("maven-publish")
+    id("signing")
 }
 
 group = "io.github.petretiandrea"
 version = "1.0-SNAPSHOT"
 
 kotlin {
-    val compilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
-
     jvm {
         compilations.all {
             kotlinOptions.jvmTarget = "1.8"
         }
-//        testRuns["test"].executionTask.configure {
-//            useJUnitPlatform()
-//        }
     }
 
     kotlin.targets.withType(KotlinNativeTarget::class.java) {
@@ -34,6 +32,7 @@ kotlin {
 
         all {
             languageSettings.optIn("kotlin.ExperimentalUnsignedTypes")
+            languageSettings.optIn("kotlin.RequiresOptIn")
         }
 
         val commonMain by getting {
@@ -92,4 +91,21 @@ tasks.withType<Test> {
         isDisabled = false
         binaryReportFile.set(file("$buildDir/custom/result.bin"))
     }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "Sonatype"
+            url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+            credentials {
+                username = project.findProperty("sonatype.publish.user")?.toString() ?: ""
+                password = project.findProperty("sonatype.publish.password")?.toString() ?: ""
+            }
+        }
+    }
+}
+
+signing {
+    sign(publishing.publications)
 }

@@ -4,22 +4,22 @@ stages:
 
 image: openjdk:11-jdk
 
-build:
-  stage: build
-  allow_failure: false
-  when: manual
-  before_script:
-    - export GRADLE_USER_HOME=`pwd`/.gradle
-    - chmod +x ./gradlew
-  cache:
-    key: $CI_PROJECT_NAME
-    paths:
-      - .gradle/wrapper
-      - .gradle/caches
-  script:
-    ./gradlew mqtt-km:assemble
-  tags:
-    - linux
+#build:
+#  stage: build
+#  allow_failure: false
+#  when: manual
+#  before_script:
+#    - export GRADLE_USER_HOME=`pwd`/.gradle
+#    - chmod +x ./gradlew
+#  cache:
+#    key: $CI_PROJECT_NAME
+#    paths:
+#      - .gradle/wrapper
+#      - .gradle/caches
+#  script:
+#    ./gradlew mqtt-km:assemble
+#  tags:
+#    - linux
 
 test-jvm:
   stage: test
@@ -58,12 +58,11 @@ test-windows:
   tags:
     - windows
   before_script:
-    - export GRADLE_USER_HOME=`pwd`/.gradle
-    - chmod +x ./gradlew
+    - $env:GRADLE_USER_HOME="$(gl)\.gradle"
   cache:
     key: $CI_PROJECT_NAME
     paths:
-      - .gradle/wrapper
-      - .gradle/caches
+      - .gradle\wrapper
+      - .gradle\caches
   script:
     - ./gradlew mqtt-km:mingwX64Test
