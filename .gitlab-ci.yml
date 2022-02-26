@@ -25,6 +25,14 @@ test-jvm:
   stage: test
   allow_failure: false
   when: manual
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+    - chmod +x ./gradlew
+  cache:
+    key: $CI_PROJECT_NAME
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
   script:
     - ./gradlew mqtt-km:jvmTest
     - ./gradlew mqtt-km:linuxX64Test
@@ -33,5 +41,13 @@ test-linux:
   stage: test
   allow_failure: false
   when: manual
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+    - chmod +x ./gradlew
+  cache:
+    key: $CI_PROJECT_NAME
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
   script:
     - ./gradlew mqtt-km:linuxX64Test
