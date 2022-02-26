@@ -63,6 +63,7 @@ kotlin {
             }
         }
         val jvmTest by getting {
+            dependsOn(commonTest)
             dependencies {
                 implementation(kotlin("test-junit"))
                 implementation("junit:junit:${Deps.junit}")
@@ -72,12 +73,16 @@ kotlin {
         val mingwX64Main by getting {
             dependsOn(posixMain)
         }
-        val mingwX64Test by getting
+        val mingwX64Test by getting {
+            dependsOn(commonTest)
+        }
 
         val linuxX64Main by getting {
             dependsOn(posixMain)
         }
-        val linuxX64Test by getting
+        val linuxX64Test by getting {
+            dependsOn(commonTest)
+        }
 
         val linuxArm64Main by getting {
             dependsOn(posixMain)
@@ -108,4 +113,8 @@ publishing {
 
 signing {
     sign(publishing.publications)
+}
+
+publishing {
+
 }
