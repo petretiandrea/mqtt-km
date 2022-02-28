@@ -244,3 +244,5 @@ gradle-app.setting
 .classpath
 
 # End of https://www.toptal.com/developers/gitignore/api/kotlin,c,c++,java,gradle,intellij
+
+local.properties
