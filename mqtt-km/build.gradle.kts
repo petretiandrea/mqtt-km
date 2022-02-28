@@ -5,6 +5,8 @@ plugins {
     id("org.jetbrains.kotlinx.kover") version "0.5.0"
 }
 
+description = "A simple MQTT 3.1.1 multiplatform client"
+
 kotlin {
     jvm {
         compilations.all {
