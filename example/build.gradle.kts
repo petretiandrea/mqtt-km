@@ -27,7 +27,7 @@ kotlin {
                 implementation(kotlin("stdlib-common"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Deps.kotlinCoroutines}")
                 implementation(project(":mqtt-km"))
-                //implementation("io.github.petretiandrea:socket:1.0-SNAPSHOT")
+                //implementation("io.github.petretiandrea:mqtt-km:1.0")
             }
         }
         val commonTest by getting {
