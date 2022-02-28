@@ -36,6 +36,9 @@ test-jvm:
       - .gradle/wrapper
   script:
     - ./gradlew mqtt-km:jvmTest
+    - ./gradlew mqtt-km:koverReport
+  after_script:
+    - bash <(curl -s https://codecov.io/bash)
 
 test-linux:
   stage: test
@@ -65,6 +68,5 @@ test-windows:
     key: $CI_PROJECT_NAME
     paths:
       - .gradle\wrapper
-      - .gradle\caches
   script:
     - ./gradlew mqtt-km:mingwX64Test

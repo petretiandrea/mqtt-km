@@ -15,6 +15,10 @@ buildscript {
     }
 }
 
+plugins {
+    id("org.jetbrains.kotlinx.kover") version "0.5.0"
+}
+
 allprojects {
 
     group = "io.github.petretiandrea"
@@ -41,7 +45,6 @@ allprojects {
                 TestLogEvent.PASSED,
                 TestLogEvent.SKIPPED,
                 TestLogEvent.FAILED,
-                TestLogEvent.STANDARD_OUT,
                 TestLogEvent.STANDARD_ERROR
             )
         }

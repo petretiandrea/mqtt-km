@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     kotlin("multiplatform")
-    id("org.jetbrains.kotlinx.kover") version "0.5.0"
 }
 
 description = "A simple MQTT 3.1.1 multiplatform client"
@@ -30,6 +29,7 @@ kotlin {
 
         all {
             languageSettings.optIn("kotlin.ExperimentalUnsignedTypes")
+            languageSettings.optIn("kotlinx.coroutines.InternalCoroutinesApi")
             languageSettings.optIn("kotlin.RequiresOptIn")
         }
 
@@ -94,5 +94,6 @@ tasks.withType<Test> {
     extensions.configure(kotlinx.kover.api.KoverTaskExtension::class) {
         isDisabled = false
         binaryReportFile.set(file("$buildDir/custom/result.bin"))
+        includes = listOf("io.github.petretiandrea.*")
     }
 }
