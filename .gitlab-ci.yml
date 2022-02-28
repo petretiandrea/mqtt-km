@@ -53,18 +53,18 @@ test-linux:
   script:
     - ./gradlew mqtt-km:linuxX64Test
 
-#test-windows:
-#  stage: test
-#  allow_failure: false
-#  when: manual
-#  tags:
-#    - windows
-#  before_script:
-#    - $env:GRADLE_USER_HOME="$(gl)\.gradle"
-#  cache:
-#    key: $CI_PROJECT_NAME
-#    paths:
-#      - .gradle\wrapper
-#      - .gradle\caches
-#  script:
-#    - ./gradlew mqtt-km:mingwX64Test
+test-windows:
+  stage: test
+  allow_failure: false
+  when: manual
+  tags:
+    - windows
+  before_script:
+    - $env:GRADLE_USER_HOME="$(gl)\.gradle"
+  cache:
+    key: $CI_PROJECT_NAME
+    paths:
+      - .gradle\wrapper
+      - .gradle\caches
+  script:
+    - ./gradlew mqtt-km:mingwX64Test

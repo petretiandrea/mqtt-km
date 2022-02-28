@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.testing.logging.*;
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
@@ -26,6 +27,24 @@ allprojects {
         maven(url = "https://h1.danbrough.org/maven/")
         maven(url = "https://jitpack.io")
         maven(url = "https://repo.repsy.io/mvn/chrynan/public")
+    }
+
+    tasks.withType<Test> {
+        dependsOn("cleanAllTests")
+        testLogging {
+            exceptionFormat = TestExceptionFormat.FULL
+            showCauses = true
+            showExceptions = true
+            showStackTraces = true
+            showStandardStreams = true
+            events = setOf(
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.FAILED,
+                TestLogEvent.STANDARD_OUT,
+                TestLogEvent.STANDARD_ERROR
+            )
+        }
     }
 }
 
