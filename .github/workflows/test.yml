@@ -1,0 +1,72 @@
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      - name: Cache gradle wrappers
+        uses: actions/cache@v2
+        with:
+          path: .gradle/wrapper
+          key: v1-gradle-wrapper
+      - run: |
+          export GRADLE_USER_HOME=`pwd`/.gradle
+          chmod +x ./gradlew
+      - name: "Build"
+        run: ./gradlew mqtt-km:assemble
+
+  linux-test:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      - name: Cache gradle wrappers
+        uses: actions/cache@v2
+        with:
+          path: .gradle/wrapper
+          key: v1-gradle-wrapper
+      - run: |
+          export GRADLE_USER_HOME=`pwd`/.gradle
+          chmod +x ./gradlew
+      - name: "Run JVM Test"
+        run:
+          ./gradlew mqtt-km:jvmTest
+      - name: "Generate coverage report to codecov"
+        run: |
+          ./gradlew mqtt-km:koverReport
+          bash <(curl -s https://codecov.io/bash)
+
+  windows-test:
+    runs-on: windows-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      - name: Cache gradle wrappers
+        uses: actions/cache@v2
+        with:
+          path: .gradle/wrapper
+          key: v1-gradle-wrapper
+      - run: $env:GRADLE_USER_HOME="$(gl)\.gradle"
+      - name: "Run Windows native Test"
+        run:
+          ./gradlew mqtt-km:mingwX64Test
