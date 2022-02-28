@@ -2,8 +2,7 @@ plugins {
     kotlin("multiplatform")
 }
 
-group = "io.github.petretiandrea"
-version = "1.0-SNAPSHOT"
+description = "A naive socket multiplatform implementation"
 
 kotlin {
     jvm {
@@ -16,10 +15,13 @@ kotlin {
     linuxX64()
     linuxArm64()
 
+    configureMavenPublish()
+
     sourceSets {
 
         all {
             languageSettings.optIn("kotlin.ExperimentalUnsignedTypes")
+            languageSettings.optIn("kotlin.RequiresOptIn")
         }
 
         val commonMain by getting {

@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="mqtt-km-jvm-1.0">
+    <output-path>D:\Projects\IntelliJProject\mqtt-km\mqtt-km\build\libs</output-path>
+    <root id="archive" name="mqtt-km-jvm-1.0.jar">
+      <element id="module-output" name="io.github.petretiandrea.mqtt-km.mqtt-km.jvmMain" />
+    </root>
+  </artifact>
+</component>

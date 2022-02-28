@@ -1,3 +1,4 @@
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
@@ -13,8 +14,11 @@ buildscript {
     }
 }
 
-
 allprojects {
+
+    group = "io.github.petretiandrea"
+    version = "1.0"
+
     repositories {
         google()
         mavenCentral()
@@ -25,6 +29,6 @@ allprojects {
     }
 }
 
-tasks.register("clean").configure {
+tasks.register("cleanBuild").configure {
     delete(rootProject.buildDir)
 }
