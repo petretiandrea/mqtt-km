@@ -1,3 +1,3 @@
 object BuildVersion {
-    val kotlin = "1.6.10"
+    val version = "1.0"
 }

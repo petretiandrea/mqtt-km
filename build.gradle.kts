@@ -10,14 +10,14 @@ buildscript {
         maven(url = "https://repo.repsy.io/mvn/chrynan/public")
     }
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${BuildVersion.kotlin}")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${Deps.kotlin}")
     }
 }
 
 allprojects {
 
     group = "io.github.petretiandrea"
-    version = "1.0"
+    version = BuildVersion.version
 
     repositories {
         google()
