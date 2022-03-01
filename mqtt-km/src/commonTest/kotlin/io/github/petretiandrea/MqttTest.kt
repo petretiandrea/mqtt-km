@@ -14,6 +14,7 @@ import io.github.petretiandrea.mqtt.dsl.tcp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -29,7 +30,13 @@ class MqttTest {
         client.disconnect()
     }
 
+    private fun generateRandomTopic(): String {
+        return "test/kotlin/topic${Random.nextInt(20_000)}"
+    }
+
+
     companion object {
+        val DEFAULT_TEST_TIMEOUT = 10.seconds
         fun createDefaultClient(scope: CoroutineScope, keepAliveSeconds: Int = 10): MqttClient {
             return mqtt(scope) {
                 tcp {
@@ -90,10 +97,11 @@ class MqttTest {
     @Test
     fun mustPublishWithDifferentQos() = runBlocking {
         client = createDefaultClient(this).apply { connect() }
+        val topic = generateRandomTopic()
         val messages = QoS.values()
-            .map { Message(MessageId.generate(), "test/kotlin", "hello", it, retain = false, duplicate = false) }
+            .map { Message(MessageId.generate(), topic, "hello", it, retain = false, duplicate = false) }
 
-        val waitResponses = collectCallback<Message>(2, 5.seconds) {
+        val waitResponses = collectCallback<Message>(2, DEFAULT_TEST_TIMEOUT) {
             client.onDeliveryCompleted { trySend(it) }
         }
         // publish
@@ -109,8 +117,8 @@ class MqttTest {
     @Test
     fun mustSubscribeToTopicWithDifferentQos() = runBlocking {
         client = createDefaultClient(this).apply { connect() }
-        val topics = QoS.values().map { it to "test/kotlin${it.ordinal}" }.toList()
-        val waitResponses = collectCallback<Pair<Subscribe, QoS>>(3, 5.seconds) {
+        val topics = QoS.values().map { it to "${generateRandomTopic()}${it.ordinal}" }.toList()
+        val waitResponses = collectCallback<Pair<Subscribe, QoS>>(3, DEFAULT_TEST_TIMEOUT) {
             client.onSubscribeCompleted { subscribe, grantedQos ->
                 trySend(subscribe to grantedQos)
             }
@@ -128,8 +136,8 @@ class MqttTest {
     @Test
     fun mustUnsubscribeFromTopic() = runBlocking {
         client = createDefaultClient(this).apply { connect() }
-        val topic = "test/kotlin"
-        val waitUnsubscribe = waitCallback<Unsubscribe>(3.seconds) {
+        val topic = generateRandomTopic()
+        val waitUnsubscribe = waitCallback<Unsubscribe>(DEFAULT_TEST_TIMEOUT) {
             client.onUnsubscribeComplete {
                 trySend(it)
             }
