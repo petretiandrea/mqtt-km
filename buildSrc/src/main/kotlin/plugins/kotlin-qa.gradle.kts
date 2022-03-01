@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${Deps.detektFormatting}")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${Deps.detekt}")
 }
 
 tasks.register<Detekt>("detektAll") {

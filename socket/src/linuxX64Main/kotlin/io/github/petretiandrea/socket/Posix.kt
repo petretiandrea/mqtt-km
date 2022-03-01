@@ -109,5 +109,9 @@ actual fun MemScope.select(
     return select(__nfds, __readfds, __writefds, __exceptfds, timeoutStruct.ptr)
 }
 
-actual fun socketsInit() {}
-actual fun socketsCleanup() {}
+actual fun socketsInit() {
+    memScoped { init_sockets() }
+}
+actual fun socketsCleanup() {
+    memScoped { deinit_sockets() }
+}

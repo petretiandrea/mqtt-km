@@ -49,6 +49,39 @@
           </config>
         </ContributedStateBase>
       </target>
+      <target name="andrea@127.0.0.1:2224" type="ssh/sftp">
+        <config>
+          <option name="projectRootOnTarget" value="/home/andrea/" />
+          <option name="serverName" value="andrea@localhost:2224 password" />
+        </config>
+        <ContributedStateBase type="GradleRuntime">
+          <config>
+            <option name="homePath" value="/opt/gradle" />
+          </config>
+        </ContributedStateBase>
+        <ContributedStateBase type="JavaLanguageRuntime">
+          <config>
+            <option name="homePath" value="/opt/java/openjdk" />
+          </config>
+        </ContributedStateBase>
+      </target>
+      <target name="WSL - Ubuntu-20.04" type="wsl">
+        <config>
+          <option name="distributionMsId" value="Ubuntu-20.04" />
+          <option name="projectRootOnTarget" value="/mnt/c/Program Files/JetBrains/IntelliJ IDEA 2021.1/jbr/bin&#10;/mqtt-km" />
+        </config>
+        <ContributedStateBase type="GradleRuntime">
+          <config>
+            <option name="homePath" value="/home/andrea/gradle-6.8" />
+          </config>
+        </ContributedStateBase>
+        <ContributedStateBase type="JavaLanguageRuntime">
+          <config>
+            <option name="homePath" value="/usr/" />
+            <option name="javaVersionString" value="11" />
+          </config>
+        </ContributedStateBase>
+      </target>
     </targets>
   </component>
 </project>
