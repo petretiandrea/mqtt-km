@@ -12,6 +12,7 @@ actual fun newSingleThreadContext(name: String): CoroutineDispatcher {
  * Porting of original single worker dispatcher of koltinx.coroutines 1.6.0.
  * This allow to use fixed coroutine context with 1.6.0-dandroid variant which support arm but miss this class.
  */
+@ExperimentalCoroutinesApi
 @OptIn(InternalCoroutinesApi::class)
 internal class SingleWorkerDispatcher(name: String) : CloseableCoroutineDispatcher(), Delay {
     private val worker = Worker.start(name = name)

@@ -30,6 +30,7 @@ kotlin {
         all {
             languageSettings.optIn("kotlin.ExperimentalUnsignedTypes")
             languageSettings.optIn("kotlinx.coroutines.InternalCoroutinesApi")
+            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
             languageSettings.optIn("kotlin.RequiresOptIn")
         }
 
