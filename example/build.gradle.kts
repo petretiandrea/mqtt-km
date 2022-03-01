@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 plugins {
     kotlin("multiplatform")
 }
@@ -9,11 +10,26 @@ kotlin {
         }
     }
 
-//    kotlin.targets.withType(KotlinNativeTarget::class.java) {
-//        binaries.all {
-//            binaryOptions["memoryModel"] = "experimental"
-//        }
-//    }
+    val hostOs = System.getProperty("os.name")
+    val isMingwX64 = hostOs.startsWith("Windows")
+    val nativeTarget = when {
+        // hostOs == "Mac OS X" -> macosX64("native") // not supported
+        hostOs == "Linux" -> linuxX64("native")
+        isMingwX64 -> mingwX64("native")
+        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+    }
+
+    nativeTarget.apply {
+        binaries {
+            executable { entryPoint = "main" }
+        }
+    }
+
+    kotlin.targets.withType(KotlinNativeTarget::class.java) {
+        binaries.all {
+            binaryOptions["memoryModel"] = "experimental"
+        }
+    }
 
     sourceSets {
 
@@ -35,6 +51,10 @@ kotlin {
                 implementation(kotlin("test-common"))
                 implementation(kotlin("test-annotations-common"))
             }
+        }
+
+        val nativeMain by getting {
+            dependsOn(commonMain)
         }
     }
 }

@@ -22,7 +22,6 @@ class PingHelper(
     }
 
     suspend fun sendPing(): Result<Unit> {
-        println("needToSend: ${needToPing()}, isExpired: ${isPingExpired()}")
         return when {
             needToPing() -> {
                 pingSentAt =
