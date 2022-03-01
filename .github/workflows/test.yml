@@ -27,7 +27,7 @@ jobs:
       - name: "Build"
         run: ./gradlew mqtt-km:assemble
 
-  linux-test:
+  jvm-test:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
@@ -51,6 +51,27 @@ jobs:
         run: |
           ./gradlew mqtt-km:koverReport
           bash <(curl -s https://codecov.io/bash)
+
+  linux-test:
+    runs-on: ubuntu-latest
+    needs: [ build ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      - name: Cache gradle wrappers
+        uses: actions/cache@v2
+        with:
+          path: .gradle/wrapper
+          key: v1-gradle-wrapper
+      - run: |
+          export GRADLE_USER_HOME=`pwd`/.gradle
+          chmod +x ./gradlew
+      - name: "Run Linux x64 Test"
+        run:
+          ./gradlew mqtt-km:linuxX64Test
 
   windows-test:
     runs-on: windows-latest
