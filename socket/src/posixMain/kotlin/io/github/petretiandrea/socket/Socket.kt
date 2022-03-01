@@ -74,7 +74,7 @@ private class SocketInputStream(
         val ready = memScoped {
             posix_FD_ZERO(readFds.ptr)
             posix_FD_SET(socketFd.convert(), readFds.ptr)
-            select(2, readFds.ptr, null, null, timeout.inWholeMilliseconds)
+            select(socketFd + 1, readFds.ptr, null, null, timeout.inWholeMilliseconds)
         }
 
         return when (ready) {
