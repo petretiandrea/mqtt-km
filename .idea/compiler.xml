@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="11" />
+    <bytecodeTargetLevel target="11">
+      <module name="io.github.petretiandrea.mqtt-km.mqtt-km.commonMain" target="1.8" />
+      <module name="io.github.petretiandrea.mqtt-km.mqtt-km.commonTest" target="1.8" />
+      <module name="io.github.petretiandrea.mqtt-km.mqtt-km.jvmMain" target="1.8" />
+      <module name="io.github.petretiandrea.mqtt-km.mqtt-km.jvmTest" target="1.8" />
+      <module name="mqtt-km.example.commonMain" target="1.8" />
+      <module name="mqtt-km.example.commonTest" target="1.8" />
+      <module name="mqtt-km.example.jvmMain" target="1.8" />
+      <module name="mqtt-km.example.jvmTest" target="1.8" />
+      <module name="mqtt-km.mqtt-km.commonMain" target="1.8" />
+      <module name="mqtt-km.mqtt-km.commonTest" target="1.8" />
+      <module name="mqtt-km.mqtt-km.jvmMain" target="1.8" />
+      <module name="mqtt-km.mqtt-km.jvmTest" target="1.8" />
+      <module name="mqtt-km.socket.commonMain" target="1.8" />
+      <module name="mqtt-km.socket.commonTest" target="1.8" />
+      <module name="mqtt-km.socket.jvmMain" target="1.8" />
+      <module name="mqtt-km.socket.jvmTest" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

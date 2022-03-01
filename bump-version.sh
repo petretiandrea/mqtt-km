@@ -23,7 +23,9 @@ escaped_old_version=$(echo $old_version | sed s/[.]/\\\\./g)
 result=$(find ./ -type f \( -iname \*.properties -o -iname \*.md \) | grep -v "\.gradle" | grep -v "build" | xargs -I{} grep -H "$escaped_old_version" {} | grep -v CHANGES.md | grep -v COMPATIBILITY.md)
 if [ -z "$result" ];
 then
-  git tag "$2"
+  git add .
+  git commit -m "bump to version $2"
+  git tag "v$2"
   echo "Done"
 else
   echo "ERROR: Previous version is present in the project: $result"
