@@ -1,7 +1,5 @@
 package io.github.petretiandrea.mqtt.core.model.packets
 
-import kotlin.experimental.and
-
 enum class Type(val value: Int) {
     CONNECT(1),
     CONNACK(2),
@@ -25,12 +23,29 @@ enum class QoS {
     Q2
 }
 
+@Suppress("MagicNumber")
 data class FixedHeader(
     val type: Type,
     val retain: Boolean,
     val qos: QoS,
     val duplicate: Boolean
 ) {
+
+    @ExperimentalUnsignedTypes
+    @Suppress("MaxLineLength")
+    fun toByteArray(remainingLength: Int): UByteArray {
+        val bytes = UByteArray(if (remainingLength > 127) 3 else 2)
+        bytes[0] =
+            (type.value and 0x0F shl 4 or ((if (duplicate) 1 else 0) and 0x01 shl 3) or (qos.ordinal and 0x3 shl 1) or ((if (retain) 1 else 0) and 0x1)).toUByte()
+        if (remainingLength > 127) {
+            bytes[1] = ((remainingLength % 128) or 0x80).toUByte()
+            bytes[2] = (remainingLength / 128).toUByte()
+        } else {
+            bytes[1] = remainingLength.toUByte()
+        }
+        return bytes
+    }
+
     companion object {
         fun fromByte(fixedHeader: UByte): Result<FixedHeader> {
             val parsedType = Type.values().firstOrNull { it.value == (fixedHeader.toInt() and 240) shr 4 }
@@ -48,19 +63,5 @@ data class FixedHeader(
                 }
             } ?: Result.failure(Exception("MQTT parse error"))
         }
-    }
-
-    @ExperimentalUnsignedTypes
-    fun toByteArray(remainingLength: Int): UByteArray {
-        val bytes = UByteArray(if (remainingLength > 127) 3 else 2)
-        bytes[0] =
-            (type.value and 0x0F shl 4 or ((if (duplicate) 1 else 0) and 0x01 shl 3) or (qos.ordinal and 0x3 shl 1) or ((if (retain) 1 else 0) and 0x1)).toUByte()
-        if (remainingLength > 127) {
-            bytes[1] = ((remainingLength % 128) or 0x80).toUByte()
-            bytes[2] = (remainingLength / 128).toUByte()
-        } else {
-            bytes[1] = remainingLength.toUByte()
-        }
-        return bytes
     }
 }

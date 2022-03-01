@@ -8,14 +8,6 @@ data class UnsubAck(
     val messageId: Int
 ) : MqttPacket {
 
-    companion object : MqttDeserializer {
-        override fun fromByteArray(data: UByteArray): Result<UnsubAck> {
-            val messageId = Util.getIntFromMSBLSB(data[0].toByte(), data[1].toByte())
-            return Result.success(UnsubAck(messageId))
-        }
-
-    }
-
     override val qos: QoS = QoS.Q0
 
     override fun toByteArray(): UByteArray {
@@ -32,4 +24,11 @@ data class UnsubAck(
         ).toByteArray(2) + bytes.toUByteArray()
     }
 
+
+    companion object : MqttDeserializer {
+        override fun fromByteArray(data: UByteArray): Result<UnsubAck> {
+            val messageId = Util.getIntFromMSBLSB(data[0].toByte(), data[1].toByte())
+            return Result.success(UnsubAck(messageId))
+        }
+    }
 }

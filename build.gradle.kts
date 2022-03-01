@@ -17,6 +17,7 @@ buildscript {
 
 plugins {
     id("org.jetbrains.kotlinx.kover") version "0.5.0"
+    id("plugins.kotlin-qa")
 }
 
 allprojects {

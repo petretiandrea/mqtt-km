@@ -8,13 +8,6 @@ data class PubRec(
     val messageId: Int
 ) : MqttPacket {
 
-    companion object : MqttDeserializer {
-        override fun fromByteArray(data: UByteArray): Result<PubRec> {
-            val messageId = Util.getIntFromMSBLSB(data[0].toByte(), data[1].toByte())
-            return Result.success(PubRec(messageId))
-        }
-    }
-
     override val qos: QoS = QoS.Q0
 
     override fun toByteArray(): UByteArray {
@@ -28,5 +21,12 @@ data class PubRec(
             qos = qos,
             duplicate = false
         ).toByteArray(2) + bytes.toUByteArray()
+    }
+
+    companion object : MqttDeserializer {
+        override fun fromByteArray(data: UByteArray): Result<PubRec> {
+            val messageId = Util.getIntFromMSBLSB(data[0].toByte(), data[1].toByte())
+            return Result.success(PubRec(messageId))
+        }
     }
 }

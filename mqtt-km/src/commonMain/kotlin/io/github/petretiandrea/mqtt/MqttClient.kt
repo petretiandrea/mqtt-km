@@ -1,3 +1,4 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
 package io.github.petretiandrea.mqtt
 
 import io.github.petretiandrea.flatMap
@@ -55,18 +56,13 @@ internal class MqttClientImpl constructor(
     private var session: Session
 ) : MqttClient, ClientCallback by callbackRegistry {
 
-    companion object {
-        private val SOCKET_IO_TIMEOUT = (0.5 * 1000).milliseconds
-    }
-
-    override var isConnected: Boolean = false
-        private set
-
-    // TODO: implements using actors and channels
     private val eventLoopContext = io.github.petretiandrea.coroutines.newSingleThreadContext("mqtt-eventloop")
     private val pingHelper: PingHelper = PingHelper(connectionSettings.keepAliveSeconds * 1000L, transport)
     private var outgoingQueue = emptyList<MqttPacket>()
     private var eventLoop: Job? = null
+
+    override var isConnected: Boolean = false
+        private set
 
     override suspend fun connect(): Result<Unit> {
         if (isConnected && transport.isConnected()) return Result.success(Unit)
@@ -215,5 +211,9 @@ internal class MqttClientImpl constructor(
         // set the session and clear packets from the send pending queue
         session = newSession
         outgoingQueue -= toRemove
+    }
+
+    companion object {
+        private val SOCKET_IO_TIMEOUT = (0.5 * 1000).milliseconds
     }
 }

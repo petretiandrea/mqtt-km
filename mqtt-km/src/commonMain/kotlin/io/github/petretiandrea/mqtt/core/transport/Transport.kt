@@ -14,12 +14,13 @@ interface Transport {
     suspend fun writePacket(packet: MqttPacket): Result<Unit>
     suspend fun writePacket(packet: MqttPacket, timeout: Duration): Result<Unit>
 
-    suspend fun close(): Unit
+    suspend fun close()
 
     @ExperimentalUnsignedTypes
+    @Suppress("NotImplementedDeclaration")
     companion object {
         fun tcp(): Transport = TransportTCP()
-        fun ssl(): Transport = TODO("SSL ACTUALLY NOT IMPLEMENTED")
-        fun websocket(): Transport = TODO("WEBSOCKET ACTUALLY NOT IMPLEMENTED")
+        fun ssl(): Transport = throw NotImplementedError("SSL ACTUALLY NOT IMPLEMENTED")
+        fun websocket(): Transport = throw NotImplementedError("WEBSOCKET ACTUALLY NOT IMPLEMENTED")
     }
 }

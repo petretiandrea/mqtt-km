@@ -2,7 +2,6 @@ package io.github.petretiandrea.mqtt.core.model.packets
 
 import io.github.petretiandrea.mqtt.core.model.Extension.writeString
 
-
 @OptIn(ExperimentalUnsignedTypes::class)
 data class Unsubscribe(
     val messageId: Int,

@@ -1,10 +1,7 @@
 package io.github.petretiandrea.socket
 
 import kotlinx.cinterop.*
-import platform.posix.SOL_SOCKET
-import platform.posix.SO_SNDBUF
 import platform.posix.fd_set
-import platform.posix.sockaddr_in
 
 expect fun connectSocket(
     hostname: String,

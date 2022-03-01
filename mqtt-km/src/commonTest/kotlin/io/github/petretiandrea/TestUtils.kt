@@ -33,7 +33,11 @@ object TestCollection {
 
 object AsyncTest {
 
-    suspend fun <T> collectCallback(toCollect: Int, timeout: Duration, callbackBloc: suspend Channel<T>.() -> Unit): Wait<List<T>> {
+    suspend fun <T> collectCallback(
+        toCollect: Int,
+        timeout: Duration,
+        callbackBloc: suspend Channel<T>.() -> Unit,
+    ): Wait<List<T>> {
         val channel = Channel<T>(toCollect)
         callbackBloc.invoke(channel)
         return {

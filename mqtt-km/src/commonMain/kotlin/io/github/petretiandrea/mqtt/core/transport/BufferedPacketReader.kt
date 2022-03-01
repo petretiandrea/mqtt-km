@@ -6,7 +6,6 @@ import io.github.petretiandrea.socket.buffer.allocMultiplatformBuffer
 import io.github.petretiandrea.socket.stream.BufferedInputStream
 import kotlin.time.Duration
 
-
 interface BufferedPacketReader {
     suspend fun next(timeout: Duration): MqttPacket?
 }
@@ -16,6 +15,7 @@ class DefaultBufferedPacketReader(
     private val reader: BufferedInputStream
 ) : BufferedPacketReader {
 
+    @Suppress("MagicNumber")
     override suspend fun next(timeout: Duration): MqttPacket? {
         var multiplier = 1
         var length = 0
@@ -27,8 +27,8 @@ class DefaultBufferedPacketReader(
                 currentByte = reader.readByte(timeout).toInt()
                 length += (currentByte and 127) * multiplier
                 multiplier *= 128
-                if (multiplier > 128 * 128 * 128)
-                    TODO() // implement exception
+                check(multiplier <= 128 * 128 * 128) { "Packet too big" }
+            // implement exception
             } while ((currentByte and 128) != 0)
 
             val buffer = allocMultiplatformBuffer(length)
@@ -38,5 +38,4 @@ class DefaultBufferedPacketReader(
         }
         return null
     }
-
 }

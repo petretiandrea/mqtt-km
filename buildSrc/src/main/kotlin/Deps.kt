@@ -9,6 +9,8 @@ object Deps {
     val kotlinDateTime = "0.3.2-danbroid"
     val kydraVersion = "1.1.8"
 
+    val detektFormatting = "1.19.0"
+
     // testing
     val junit = "4.13.2"
 }

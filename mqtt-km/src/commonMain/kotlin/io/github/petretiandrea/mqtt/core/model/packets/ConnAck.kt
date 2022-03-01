@@ -9,6 +9,19 @@ data class ConnAck internal constructor(
     val connectionStatus: ConnectionStatus
 ) : MqttPacket {
 
+    override val qos: QoS = QoS.Q0
+
+    @Suppress("MaxLineLength")
+    override fun toByteArray(): UByteArray {
+        val fixedHeader = FixedHeader(Type.CONNACK, false, qos, false)
+        val bytes = UByteArray(2).apply {
+            this[0] =
+                if (connectionStatus != ConnectionStatus.ACCEPT) 0.toUByte() else (if (sessionPresent) 1 else 0).toUByte()
+            this[1] = connectionStatus.ordinal.toUByte()
+        }
+        return fixedHeader.toByteArray(2) + bytes
+    }
+
     companion object : MqttDeserializer {
         override fun fromByteArray(data: UByteArray): Result<ConnAck> {
             val sessionPresent = (data[0] and 1u).toInt() == 1
@@ -22,17 +35,5 @@ data class ConnAck internal constructor(
             }
             return packet?.let { Result.success(it) } ?: Result.failure(Exception("MQTT PARSE ERROR"))
         }
-    }
-
-    override val qos: QoS = QoS.Q0
-
-    override fun toByteArray(): UByteArray {
-        val fixedHeader = FixedHeader(Type.CONNACK, false, qos, false)
-        val bytes = UByteArray(2).apply {
-            this[0] =
-                if (connectionStatus != ConnectionStatus.ACCEPT) 0.toUByte() else (if (sessionPresent) 1 else 0).toUByte()
-            this[1] = connectionStatus.ordinal.toUByte()
-        }
-        return fixedHeader.toByteArray(2) + bytes
     }
 }

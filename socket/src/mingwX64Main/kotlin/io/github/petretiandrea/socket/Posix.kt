@@ -51,7 +51,8 @@ actual fun isSocketConnected(
 ): Boolean {
     return memScoped {
         val error = alloc<IntVar>()
-        val isConnected = getsockopt(socket.convert(), SOL_SOCKET, SO_ERROR, error.ptr.reinterpret(), sizeOf<IntVar>().toCPointer())
+        val isConnected =
+            getsockopt(socket.convert(), SOL_SOCKET, SO_ERROR, error.ptr.reinterpret(), sizeOf<IntVar>().toCPointer())
         error.value <= 0 && isConnected != 0
     }
 }
@@ -112,7 +113,7 @@ actual fun MemScope.select(
 }
 
 actual fun socketsInit() {
-   memScoped { init_sockets() }
+    memScoped { init_sockets() }
 }
 
 actual fun socketsCleanup() {

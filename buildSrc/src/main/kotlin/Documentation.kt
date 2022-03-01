@@ -8,7 +8,7 @@ import org.gradle.kotlin.dsl.registering
 fun Project.configureDoc(): TaskProvider<Jar> {
     val javadocJar by tasks.registering(Jar::class) { archiveClassifier.set("javadoc") }
 
-    val dokkaOutputDir = "$buildDir/dokka"
+    // val dokkaOutputDir = "$buildDir/dokka"
 
     return javadocJar
 }

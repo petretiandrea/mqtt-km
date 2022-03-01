@@ -10,19 +10,6 @@ data class SubAck(
     val isFailure: Boolean
 ) : MqttPacket {
 
-    companion object : MqttDeserializer {
-        override fun fromByteArray(data: UByteArray): Result<SubAck> {
-            var offset = 0
-            val messageId = Util.getIntFromMSBLSB(data[offset++].toByte(), data[offset++].toByte())
-            val grantedQos = (data[offset].toUInt() and 255u).let { byte ->
-                if (byte != 128u) QoS.values().firstOrNull { it.ordinal == byte.toInt() } else null
-            }
-            return Result.success(
-                SubAck(messageId, grantedQos ?: QoS.Q0, grantedQos == null)
-            )
-        }
-    }
-
     override val qos: QoS = QoS.Q0
 
     override fun toByteArray(): UByteArray {
@@ -45,4 +32,17 @@ data class SubAck(
         grantedQos == QoS.Q1 -> 1u
         else -> 2u // qos2
     }.toByte()
+
+    companion object : MqttDeserializer {
+        override fun fromByteArray(data: UByteArray): Result<SubAck> {
+            var offset = 0
+            val messageId = Util.getIntFromMSBLSB(data[offset++].toByte(), data[offset++].toByte())
+            val grantedQos = (data[offset].toUInt() and 255u).let { byte ->
+                if (byte != 128u) QoS.values().firstOrNull { it.ordinal == byte.toInt() } else null
+            }
+            return Result.success(
+                SubAck(messageId, grantedQos ?: QoS.Q0, grantedQos == null)
+            )
+        }
+    }
 }

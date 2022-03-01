@@ -4,16 +4,22 @@ import io.github.petretiandrea.AsyncTest.collectCallback
 import io.github.petretiandrea.AsyncTest.waitCallback
 import io.github.petretiandrea.TestCollection.assertContentEqualsIgnoreOrder
 import io.github.petretiandrea.mqtt.MqttClient
-import io.github.petretiandrea.mqtt.core.ConnectionSettings
 import io.github.petretiandrea.mqtt.core.model.Message
 import io.github.petretiandrea.mqtt.core.model.MessageId
-import io.github.petretiandrea.mqtt.core.model.packets.*
+import io.github.petretiandrea.mqtt.core.model.packets.QoS
+import io.github.petretiandrea.mqtt.core.model.packets.Subscribe
+import io.github.petretiandrea.mqtt.core.model.packets.Unsubscribe
 import io.github.petretiandrea.mqtt.dsl.mqtt
 import io.github.petretiandrea.mqtt.dsl.tcp
-import kotlinx.coroutines.*
-import kotlin.test.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+@Suppress("ClassOrdering")
 @ExperimentalUnsignedTypes
 class MqttTest {
 
@@ -74,7 +80,7 @@ class MqttTest {
     @Test
     fun mustKeepConnectionActive() = runBlocking {
         client = createDefaultClient(this, 2).apply { connect() }
-        delay(10000)
+        delay(10_000)
         assertTrue(client.isConnected)
         assertTrue(client.disconnect().isSuccess)
 
@@ -111,9 +117,10 @@ class MqttTest {
         }
 
         val published = topics.map { client.subscribe(it.second, it.first) }
+        assertTrue(published.all { it })
+
         val collectedAck = waitResponses().map { it.second to it.first.topic } // qos -> topic
 
-        assertTrue(published.all { it })
         assertContentEqualsIgnoreOrder(topics, collectedAck)
         teardown()
     }

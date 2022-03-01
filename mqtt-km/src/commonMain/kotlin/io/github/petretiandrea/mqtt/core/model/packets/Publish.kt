@@ -1,9 +1,7 @@
 package io.github.petretiandrea.mqtt.core.model.packets
 
-import io.github.petretiandrea.flatMap
-import io.github.petretiandrea.mqtt.core.model.Message
 import io.github.petretiandrea.mqtt.core.model.Extension.writeString
-import io.github.petretiandrea.mqtt.core.model.Extension.writeStringU
+import io.github.petretiandrea.mqtt.core.model.Message
 import io.github.petretiandrea.mqtt.core.model.MqttDeserializer
 import io.github.petretiandrea.mqtt.core.model.Util
 
@@ -11,6 +9,25 @@ import io.github.petretiandrea.mqtt.core.model.Util
 data class Publish(
     val message: Message
 ) : MqttPacket {
+
+    override val qos: QoS = message.qos
+
+    override fun toByteArray(): UByteArray {
+        val bytes = mutableListOf<Byte>()
+        bytes.writeString(message.topic)
+        // qos 1 and 2 need a message id
+        if (message.qos.ordinal > QoS.Q0.ordinal) {
+            bytes += (message.messageId shr 8).toByte()
+            bytes += (message.messageId and 0xFF).toByte()
+        }
+        bytes += message.message.encodeToByteArray().toList()
+        return FixedHeader(
+            Type.PUBLISH,
+            message.retain,
+            message.qos,
+            message.duplicate
+        ).toByteArray(bytes.size) + bytes.toByteArray().toUByteArray()
+    }
 
     companion object : MqttDeserializer {
         override fun fromByteArray(data: UByteArray): Result<Publish> {
@@ -42,25 +59,5 @@ data class Publish(
                 )
             }
         }
-
-    }
-
-    override val qos: QoS = message.qos
-
-    override fun toByteArray(): UByteArray {
-        val bytes = mutableListOf<Byte>()
-        bytes.writeString(message.topic)
-        // qos 1 and 2 need a message id
-        if (message.qos.ordinal > QoS.Q0.ordinal) {
-            bytes += (message.messageId shr 8).toByte()
-            bytes += (message.messageId and 0xFF).toByte()
-        }
-        bytes += message.message.encodeToByteArray().toList()
-        return FixedHeader(
-            Type.PUBLISH,
-            message.retain,
-            message.qos,
-            message.duplicate
-        ).toByteArray(bytes.size) + bytes.toByteArray().toUByteArray()
     }
 }

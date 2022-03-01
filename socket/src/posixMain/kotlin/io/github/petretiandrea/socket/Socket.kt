@@ -13,7 +13,6 @@ import kotlin.time.Duration
 
 @OptIn(ExperimentalUnsignedTypes::class)
 actual fun createSocket(hostname: String, port: Int): SocketInterface {
-
     Socket.initializeSockets()
 
     return connectSocket(hostname, port)?.let { socketFd ->
@@ -32,17 +31,6 @@ private class Socket(
     private val socketOutputStream: SocketOutputStream,
 ) : SocketInterface {
 
-    @ThreadLocal
-    companion object {
-        private var initialized: Boolean = false
-        internal fun initializeSockets() {
-            if (!initialized) {
-                initialized = true
-                socketsInit()
-            }
-        }
-    }
-
     override fun inputStream(): InputStream = socketInputStream
     override fun outputStream(): OutputStream = socketOutputStream
 
@@ -55,6 +43,17 @@ private class Socket(
         outputStream().close()
         shutdown(socketFd)
         close(socketFd)
+    }
+
+    @ThreadLocal
+    companion object {
+        private var initialized: Boolean = false
+        internal fun initializeSockets() {
+            if (!initialized) {
+                initialized = true
+                socketsInit()
+            }
+        }
     }
 }
 
