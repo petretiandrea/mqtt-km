@@ -30,7 +30,6 @@ jobs:
         with:
           path: |
             ~/.gradle/caches
-            ~/.konan/cache
           key: build-${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
       - name: "Build"
         run: |
@@ -55,7 +54,6 @@ jobs:
         with:
           path: |
             ~/.gradle/caches
-            ~/.konan/cache
           key: build-${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
       - run: chmod +x ./gradlew
 
@@ -100,7 +98,6 @@ jobs:
         with:
           path: |
             ~/.gradle/caches
-            ~/.konan/cache
           key: build-${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
       - run: chmod +x ./gradlew
       - name: "Publish socket library to maven central"
