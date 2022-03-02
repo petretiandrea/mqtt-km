@@ -6,6 +6,7 @@ A simple MQTT client kotlin multiplatform implementation.
 [![GitHub Build](https://github.com/petretiandrea/mqtt-km/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/petretiandrea/mqtt-km/actions/workflows/build.yml)
 [![Kotlin](https://img.shields.io/badge/kotlin-1.6.10-orange.svg)](http://kotlinlang.org/)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.petretiandrea/mqtt-km.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22io.github.petretiandrea.mqtt-km%22)
+[![codecov](https://codecov.io/gh/petretiandrea/mqtt-km/branch/main/graph/badge.svg?token=G8YD0T377P)](https://codecov.io/gh/petretiandrea/mqtt-km)
 
 **WIKI will be available as soon as possible**
 
