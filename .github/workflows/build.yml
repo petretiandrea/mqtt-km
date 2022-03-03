@@ -25,12 +25,16 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '11'
-      - name: Cache gradle deps and konan
+      - name: Cache gradle deps
         uses: actions/cache@v2
         with:
           path: |
             ~/.gradle/caches
           key: build-${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
+      - name: Cache konan compiler
+        with:
+          path: ~/.konan
+          key: build-${{ runner.os }}-konan-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
       - name: "Build"
         run: |
           chmod +x ./gradlew
@@ -49,12 +53,17 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '11'
-      - name: Cache gradle deps and konan
+      - name: Cache gradle deps
         uses: actions/cache@v2
         with:
           path: |
             ~/.gradle/caches
           key: build-${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
+      - name: Cache konan compiler
+        with:
+          path: ~/.konan
+          key: test-${{ matrix.os }}-konan-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
+
       - run: chmod +x ./gradlew
 
       - name: "Run JVM Test and report"
@@ -93,12 +102,16 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '11'
-      - name: Cache gradle deps and konan
+      - name: Cache gradle deps
         uses: actions/cache@v2
         with:
           path: |
             ~/.gradle/caches
           key: build-${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
+      - name: Cache konan compiler
+        with:
+          path: ~/.konan
+          key: build-${{ runner.os }}-konan-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
       - run: chmod +x ./gradlew
       - name: "Publish socket library to maven central"
         run: |
