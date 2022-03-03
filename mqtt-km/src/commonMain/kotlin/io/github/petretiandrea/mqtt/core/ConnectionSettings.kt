@@ -2,6 +2,7 @@ package io.github.petretiandrea.mqtt.core
 
 import io.github.petretiandrea.mqtt.core.model.Message
 import io.github.petretiandrea.mqtt.core.model.packets.Connect
+import kotlinx.datetime.Clock
 
 enum class Protocol {
     TCP,

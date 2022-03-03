@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.seconds
 data class MqttClientSettingsBuilder(
     var hostname: String?,
     var port: Int = 1883,
-    var clientId: String?,
+    var clientId: String = MqttClient.generateClientId(),
     var username: String = "",
     var password: String = "",
     var cleanSession: Boolean = false,
@@ -29,7 +29,6 @@ data class MqttClientSettingsBuilder(
 ) {
     internal fun buildSettings(): ConnectionSettings {
         requireNotNull(hostname) { "Hostname cannot be null" }
-        requireNotNull(clientId) { "Client id cannot be null" }
         return ConnectionSettings(
             hostname = hostname.orEmpty(),
             port = port,
