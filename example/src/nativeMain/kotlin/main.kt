@@ -8,7 +8,8 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
 
-    val client = mqtt(this) {
+    // create from current coroutine scope or specify it: mqtt(scope) { }
+    val client = mqtt {
         tcp {
             hostname = "broker.hivemq.com"
             port = 1883
