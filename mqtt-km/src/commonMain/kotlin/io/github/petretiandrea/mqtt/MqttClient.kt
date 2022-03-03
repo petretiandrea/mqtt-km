@@ -68,7 +68,7 @@ internal class MqttClientImpl constructor(
     private var session: Session
 ) : MqttClient, ClientCallback by callbackRegistry {
 
-    private val eventLoopContext = newSingleThreadContext("mqtt-eventloop")
+    private val eventLoopContext = io.github.petretiandrea.coroutines.newSingleThreadContext("mqtt-eventloop")
     private val pingHelper: PingHelper = PingHelper(connectionSettings.keepAliveSeconds * 1000L, transport)
     private var outgoingQueue = emptyList<MqttPacket>()
     private var eventLoop: Job? = null
@@ -125,7 +125,7 @@ internal class MqttClientImpl constructor(
     }
 
     private suspend fun eventLoop(): Unit = withContext(eventLoopContext) {
-        while (isActive) {
+        while (isActive && transport.isConnected()) {
             sendPendingQueue()
 
             val packet = transport.readPacket(SOCKET_IO_TIMEOUT)
@@ -144,6 +144,7 @@ internal class MqttClientImpl constructor(
             }
             yield() // release to others coroutines
         }
+        cancel()
         transport.close()
     }
 

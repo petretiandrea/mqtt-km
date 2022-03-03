@@ -2,6 +2,7 @@ package io.github.petretiandrea
 
 import io.github.petretiandrea.mqtt.core.MqttVersion
 import io.github.petretiandrea.mqtt.core.model.ConnectionStatus
+import io.github.petretiandrea.mqtt.core.model.Message
 import io.github.petretiandrea.mqtt.core.model.packets.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -71,5 +72,20 @@ class PacketParserOfflineTest {
         val ack = UnsubAck(1234)
         val dataBytes = ack.toByteArray().let { it.copyOfRange(2, it.size) }
         assertEquals(ack, UnsubAck.fromByteArray(dataBytes).getOrNull())
+    }
+
+    @Test
+    fun canSerializeDeserializePublish() {
+        val publish = Publish(Message("topic", "message", qos = QoS.Q1, retain = false, duplicate = false))
+        val publishByte = publish.toByteArray()
+        assertEquals(publish, Publish.fromByteArray(publishByte).getOrNull())
+    }
+
+    @Test
+    fun canSerializeDeserializeBigPublishPacket() {
+        val message = (0..127).joinToString(separator = "") { "a" }
+        val publish = Publish(Message("topic", message, qos = QoS.Q1, retain = false, duplicate = false))
+        val publishByte = publish.toByteArray()
+        assertEquals(publish, Publish.fromByteArray(publishByte).getOrNull())
     }
 }

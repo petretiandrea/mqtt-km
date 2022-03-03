@@ -25,7 +25,7 @@ data class PubRel(
 
     companion object : MqttDeserializer {
         override fun fromByteArray(data: UByteArray): Result<PubRel> {
-            val messageId = Util.getIntFromMSBLSB(data[0].toByte(), data[1].toByte())
+            val messageId = Util.getIntFromMSBLSB(data[0], data[1])
             return Result.success(PubRel(messageId))
         }
     }
