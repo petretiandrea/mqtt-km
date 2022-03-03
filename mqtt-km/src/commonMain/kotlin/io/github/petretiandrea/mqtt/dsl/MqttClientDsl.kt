@@ -22,17 +22,17 @@ fun mqtt(scope: CoroutineScope, bloc: MqttClientBuilder.() -> Unit): MqttClient 
 @MqttClientDsl
 fun MqttClientBuilder.tcp(bloc: MqttClientSettingsBuilder.() -> Unit) {
     settings =
-        MqttClientSettingsBuilder(hostname = null, clientId = null, protocol = Protocol.TCP).also(bloc)
+        MqttClientSettingsBuilder(hostname = null, protocol = Protocol.TCP).also(bloc)
 }
 
 @MqttClientDsl
 fun MqttClientBuilder.ssl(bloc: MqttClientSettingsBuilder.() -> Unit) {
     settings =
-        MqttClientSettingsBuilder(hostname = null, clientId = null, protocol = Protocol.SSL).also(bloc)
+        MqttClientSettingsBuilder(hostname = null, protocol = Protocol.SSL).also(bloc)
 }
 
 @MqttClientDsl
 fun MqttClientBuilder.websocket(bloc: MqttClientSettingsBuilder.() -> Unit) {
     settings =
-        MqttClientSettingsBuilder(hostname = null, clientId = null, protocol = Protocol.SSL).also(bloc)
+        MqttClientSettingsBuilder(hostname = null, protocol = Protocol.SSL).also(bloc)
 }

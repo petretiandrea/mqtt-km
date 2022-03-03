@@ -32,6 +32,7 @@ jobs:
             ~/.gradle/caches
           key: build-${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
       - name: Cache konan compiler
+        uses: actions/cache@v2
         with:
           path: ~/.konan
           key: build-${{ runner.os }}-konan-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
@@ -60,6 +61,7 @@ jobs:
             ~/.gradle/caches
           key: build-${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
       - name: Cache konan compiler
+        uses: actions/cache@v2
         with:
           path: ~/.konan
           key: test-${{ matrix.os }}-konan-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
@@ -109,6 +111,7 @@ jobs:
             ~/.gradle/caches
           key: build-${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}
       - name: Cache konan compiler
+        uses: actions/cache@v2
         with:
           path: ~/.konan
           key: build-${{ runner.os }}-konan-${{ hashFiles('**/*.gradle', '**/*.gradle.kts') }}

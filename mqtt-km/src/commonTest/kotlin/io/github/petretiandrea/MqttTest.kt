@@ -109,7 +109,7 @@ class MqttTest {
         client = createDefaultClient(this).apply { connect() }
         val topic = generateRandomTopic()
         val messages = QoS.values()
-            .map { Message(topic, "hello", it, retain = false, duplicate = false) }
+            .map { Message(topic, generateRandomMessage(4), it, retain = false, duplicate = false) }
 
         val waitResponses = collectCallback<Message>(2, DEFAULT_TEST_TIMEOUT) {
             client.onDeliveryCompleted { trySend(it) }
@@ -163,7 +163,7 @@ class MqttTest {
     fun canPublishLargeMessage() = runBlocking {
         client = createDefaultClient(this).apply { connect() }
         val topic = generateRandomTopic()
-        val messagePayload = (0..127).joinToString(separator = "") { "a" }
+        val messagePayload = generateRandomMessage(127)
         val message = Message(topic, messagePayload, qos = QoS.Q1, retain = false, duplicate = false)
 
         val waitPublish = waitCallback<Message>(DEFAULT_TEST_TIMEOUT) {

@@ -4,6 +4,7 @@ package io.github.petretiandrea.mqtt
 
 import io.github.petretiandrea.flatMap
 import io.github.petretiandrea.mqtt.core.ConnectionSettings
+import io.github.petretiandrea.mqtt.core.DefaultTopicValidator
 import io.github.petretiandrea.mqtt.core.Protocol
 import io.github.petretiandrea.mqtt.core.asConnectPacket
 import io.github.petretiandrea.mqtt.core.model.ConnectionStatus
@@ -16,9 +17,7 @@ import io.github.petretiandrea.mqtt.core.transport.Transport
 import io.github.petretiandrea.socket.exception.SocketErrorReason
 import io.github.petretiandrea.socket.exception.SocketException
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
-import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
 interface MqttClient : ClientCallback {
@@ -40,6 +39,9 @@ interface MqttClient : ClientCallback {
     suspend fun unsubscribe(topic: String): Boolean
 
     companion object {
+        private const val CLIENT_ID_PREFIX = "mqtt-km"
+        fun generateClientId() = CLIENT_ID_PREFIX + Clock.System.now().toEpochMilliseconds()
+
         operator fun invoke(
             scope: CoroutineScope,
             connectionSettings: ConnectionSettings,
@@ -70,6 +72,7 @@ internal class MqttClientImpl constructor(
 
     private val eventLoopContext = io.github.petretiandrea.coroutines.newSingleThreadContext("mqtt-eventloop")
     private val pingHelper: PingHelper = PingHelper(connectionSettings.keepAliveSeconds * 1000L, transport)
+    private val topicValidator = DefaultTopicValidator()
     private var outgoingQueue = emptyList<MqttPacket>()
     private var eventLoop: Job? = null
 
@@ -110,18 +113,24 @@ internal class MqttClientImpl constructor(
     }
 
     override suspend fun publish(message: Message): Boolean = withContext(eventLoopContext) {
-        outgoingQueue += Publish(message)
-        true
+        if (topicValidator.isValidSubscribeTopic(message.topic)) {
+            outgoingQueue += Publish(message)
+            true
+        } else false
     }
 
     override suspend fun subscribe(topic: String, qoS: QoS): Boolean = withContext(eventLoopContext) {
-        outgoingQueue += Subscribe(MessageId.generate(), topic, qoS)
-        true
+        if (topicValidator.isValidSubscribeTopic(topic)) {
+            outgoingQueue += Subscribe(MessageId.generate(), topic, qoS)
+            true
+        } else false
     }
 
     override suspend fun unsubscribe(topic: String): Boolean = withContext(eventLoopContext) {
-        outgoingQueue += Unsubscribe(MessageId.generate(), topic)
-        true
+        if (topicValidator.isValidSubscribeTopic(topic)) {
+            outgoingQueue += Unsubscribe(MessageId.generate(), topic)
+            true
+        } else true
     }
 
     private suspend fun eventLoop(): Unit = withContext(eventLoopContext) {

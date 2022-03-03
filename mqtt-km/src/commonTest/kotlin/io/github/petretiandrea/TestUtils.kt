@@ -5,10 +5,16 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withTimeout
+import kotlin.random.Random
 import kotlin.test.fail
 import kotlin.time.Duration
 
 typealias Wait<T> = suspend () -> T
+
+fun generateRandomMessage(size: Int): String {
+    val alphabet = "abcdefghilmnopqrstuvzywx1234567890"
+    return (0..size).map { alphabet[Random.nextInt(alphabet.length)] }.joinToString("")
+}
 
 object TestCollection {
     fun <T> assertContentEqualsIgnoreOrder(expected: Iterable<T>, actual: Iterable<T>) {
