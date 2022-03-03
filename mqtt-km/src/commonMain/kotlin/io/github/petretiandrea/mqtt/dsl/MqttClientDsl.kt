@@ -3,11 +3,13 @@ package io.github.petretiandrea.mqtt.dsl
 import io.github.petretiandrea.mqtt.MqttClient
 import io.github.petretiandrea.mqtt.core.Protocol
 import kotlinx.coroutines.CoroutineScope
+import kotlin.jvm.JvmName
 
 @DslMarker
 annotation class MqttClientDsl
 
 @MqttClientDsl
+@JvmName("mqttWithScopeExtension")
 fun CoroutineScope.mqtt(bloc: MqttClientBuilder.() -> Unit): MqttClient {
     return mqtt(this, bloc)
 }

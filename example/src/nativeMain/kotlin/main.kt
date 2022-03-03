@@ -1,5 +1,4 @@
 import io.github.petretiandrea.mqtt.core.model.Message
-import io.github.petretiandrea.mqtt.core.model.MessageId
 import io.github.petretiandrea.mqtt.core.model.packets.QoS
 import io.github.petretiandrea.mqtt.dsl.mqtt
 import io.github.petretiandrea.mqtt.dsl.tcp
@@ -35,10 +34,11 @@ fun main() = runBlocking {
 
     client.publish(
         Message(
-            MessageId.generate(), "sensor/sensor-1234/temperature", "45.4", QoS.Q1, retain = false,
-            duplicate = false
+            topic = "sensor/sensor-1234/temperature", message = "45.4", qos = QoS.Q1
         )
     )
+
+    client.publish("sensor/sensor-1234/temperature", "47.6") // default qos0
 
     client.onDisconnect { println("Client Disconnected") }
 

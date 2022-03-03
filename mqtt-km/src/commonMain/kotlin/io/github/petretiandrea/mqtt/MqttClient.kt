@@ -1,4 +1,5 @@
 @file:Suppress("WildcardImport", "NoWildcardImports")
+
 package io.github.petretiandrea.mqtt
 
 import io.github.petretiandrea.flatMap
@@ -15,6 +16,9 @@ import io.github.petretiandrea.mqtt.core.transport.Transport
 import io.github.petretiandrea.socket.exception.SocketErrorReason
 import io.github.petretiandrea.socket.exception.SocketException
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlin.time.Duration.Companion.milliseconds
 
 interface MqttClient : ClientCallback {
@@ -24,6 +28,14 @@ interface MqttClient : ClientCallback {
     suspend fun disconnect(): Result<Unit>
 
     suspend fun publish(message: Message): Boolean
+    suspend fun publish(
+        topic: String,
+        data: String,
+        qoS: QoS = QoS.Q0,
+        retain: Boolean = false,
+        duplicate: Boolean = false
+    ): Boolean = publish(Message(topic, data, qoS, retain, duplicate))
+
     suspend fun subscribe(topic: String, qoS: QoS): Boolean
     suspend fun unsubscribe(topic: String): Boolean
 
@@ -56,7 +68,7 @@ internal class MqttClientImpl constructor(
     private var session: Session
 ) : MqttClient, ClientCallback by callbackRegistry {
 
-    private val eventLoopContext = io.github.petretiandrea.coroutines.newSingleThreadContext("mqtt-eventloop")
+    private val eventLoopContext = newSingleThreadContext("mqtt-eventloop")
     private val pingHelper: PingHelper = PingHelper(connectionSettings.keepAliveSeconds * 1000L, transport)
     private var outgoingQueue = emptyList<MqttPacket>()
     private var eventLoop: Job? = null

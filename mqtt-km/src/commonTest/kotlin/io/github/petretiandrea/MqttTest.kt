@@ -99,7 +99,7 @@ class MqttTest {
         client = createDefaultClient(this).apply { connect() }
         val topic = generateRandomTopic()
         val messages = QoS.values()
-            .map { Message(MessageId.generate(), topic, "hello", it, retain = false, duplicate = false) }
+            .map { Message(topic, "hello", it, retain = false, duplicate = false) }
 
         val waitResponses = collectCallback<Message>(2, DEFAULT_TEST_TIMEOUT) {
             client.onDeliveryCompleted { trySend(it) }
