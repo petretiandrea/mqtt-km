@@ -34,15 +34,18 @@ data class Publish(
             var offset = 0
             // need to parse header to obtain right qos and other fixed header info
             return FixedHeader.fromByte(data[offset++]).map { header ->
-                val topicLength = Util.getIntFromMSBLSB(data[offset++].toByte(), data[offset++].toByte())
+                // skip remaining length
+                offset += FixedHeader.detectRemainingLengthSize(data)
+
+                val topicLength = Util.getIntFromMSBLSB(data[offset++], data[offset++])
                 val topic =
                     data.drop(offset).take(topicLength).map { it.toInt().toChar() }.toCharArray().concatToString()
 
                 offset += topicLength
 
                 val messageId = if (header.qos > QoS.Q0) Util.getIntFromMSBLSB(
-                    data[offset++].toByte(),
-                    data[offset++].toByte()
+                    data[offset++],
+                    data[offset++]
                 ) else 0
                 val message =
                     data.drop(offset).map { it.toInt().toChar() }.toCharArray().concatToString()

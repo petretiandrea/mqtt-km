@@ -36,7 +36,7 @@ data class SubAck(
     companion object : MqttDeserializer {
         override fun fromByteArray(data: UByteArray): Result<SubAck> {
             var offset = 0
-            val messageId = Util.getIntFromMSBLSB(data[offset++].toByte(), data[offset++].toByte())
+            val messageId = Util.getIntFromMSBLSB(data[offset++], data[offset++])
             val grantedQos = (data[offset].toUInt() and 255u).let { byte ->
                 if (byte != 128u) QoS.values().firstOrNull { it.ordinal == byte.toInt() } else null
             }

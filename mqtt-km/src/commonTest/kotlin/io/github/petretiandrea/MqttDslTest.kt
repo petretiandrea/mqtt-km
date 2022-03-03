@@ -12,12 +12,11 @@ import kotlin.test.assertTrue
 class MqttDslTest {
 
     @Test
-    fun hostnamePortClientIdMustBeMandatory() {
+    fun hostnameClientIdMustBeMandatory() {
         assertFailsWith<IllegalArgumentException> {
             mqtt(CoroutineScope(Dispatchers.Main)) {
                 tcp {
                     hostname = null
-                    port = null
                     clientId = null
                 }
             }

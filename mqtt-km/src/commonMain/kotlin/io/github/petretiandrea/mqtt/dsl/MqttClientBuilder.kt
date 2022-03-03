@@ -15,51 +15,24 @@ import kotlinx.coroutines.CoroutineScope
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-@DslMarker
-annotation class MqttClientDsl
-
-@MqttClientDsl
-fun mqtt(scope: CoroutineScope, bloc: MqttClientBuilder.() -> Unit): MqttClient {
-    return MqttClientBuilder(scope).apply(bloc).buildClient()
-}
-
-@MqttClientDsl
-fun MqttClientBuilder.tcp(bloc: MqttClientSettingsBuilder.() -> Unit) {
-    settings =
-        MqttClientSettingsBuilder(hostname = null, port = null, clientId = null, protocol = Protocol.TCP).also(bloc)
-}
-
-@MqttClientDsl
-fun MqttClientBuilder.ssl(bloc: MqttClientSettingsBuilder.() -> Unit) {
-    settings =
-        MqttClientSettingsBuilder(hostname = null, port = null, clientId = null, protocol = Protocol.SSL).also(bloc)
-}
-
-@MqttClientDsl
-fun MqttClientBuilder.websocket(bloc: MqttClientSettingsBuilder.() -> Unit) {
-    settings =
-        MqttClientSettingsBuilder(hostname = null, port = null, clientId = null, protocol = Protocol.SSL).also(bloc)
-}
-
 @MqttClientDsl
 data class MqttClientSettingsBuilder(
     var hostname: String?,
-    var port: Int?,
+    var port: Int = 1883,
     var clientId: String?,
     var username: String = "",
     var password: String = "",
     var cleanSession: Boolean = false,
     var willMessage: Message? = null,
     var keepAlive: Duration = 60.seconds,
-    val protocol: Protocol = Protocol.TCP
+    internal val protocol: Protocol = Protocol.TCP
 ) {
     internal fun buildSettings(): ConnectionSettings {
         requireNotNull(hostname) { "Hostname cannot be null" }
-        requireNotNull(port) { "Port cannot be null" }
         requireNotNull(clientId) { "Client id cannot be null" }
         return ConnectionSettings(
             hostname = hostname.orEmpty(),
-            port = port ?: 0,
+            port = port,
             clientId = clientId.orEmpty(),
             username = username,
             password = password,

@@ -6,6 +6,7 @@ import io.github.petretiandrea.TestCollection.assertContentEqualsIgnoreOrder
 import io.github.petretiandrea.mqtt.MqttClient
 import io.github.petretiandrea.mqtt.core.model.Message
 import io.github.petretiandrea.mqtt.core.model.MessageId
+import io.github.petretiandrea.mqtt.core.model.packets.Publish
 import io.github.petretiandrea.mqtt.core.model.packets.QoS
 import io.github.petretiandrea.mqtt.core.model.packets.Subscribe
 import io.github.petretiandrea.mqtt.core.model.packets.Unsubscribe
@@ -17,6 +18,7 @@ import kotlinx.coroutines.runBlocking
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
@@ -60,6 +62,14 @@ class MqttTest {
     }
 
     @Test
+    fun mustThrowConnectionErrorWithInvalidServer() = runBlocking {
+        client = mqtt {
+            tcp { hostname = "invalid.server.com"; clientId = "1234" }
+        }
+        assertTrue(client.connect().isFailure)
+    }
+
+    @Test
     fun canDisconnectFromServer() = runBlocking {
         client = createDefaultClient(this)
         client.connect()
@@ -99,7 +109,7 @@ class MqttTest {
         client = createDefaultClient(this).apply { connect() }
         val topic = generateRandomTopic()
         val messages = QoS.values()
-            .map { Message(MessageId.generate(), topic, "hello", it, retain = false, duplicate = false) }
+            .map { Message(topic, "hello", it, retain = false, duplicate = false) }
 
         val waitResponses = collectCallback<Message>(2, DEFAULT_TEST_TIMEOUT) {
             client.onDeliveryCompleted { trySend(it) }
@@ -145,6 +155,23 @@ class MqttTest {
 
         assertTrue(client.unsubscribe(topic))
         assertEquals(topic, waitUnsubscribe().topic)
+
+        teardown()
+    }
+
+    @Test
+    fun canPublishLargeMessage() = runBlocking {
+        client = createDefaultClient(this).apply { connect() }
+        val topic = generateRandomTopic()
+        val messagePayload = (0..127).joinToString(separator = "") { "a" }
+        val message = Message(topic, messagePayload, qos = QoS.Q1, retain = false, duplicate = false)
+
+        val waitPublish = waitCallback<Message>(DEFAULT_TEST_TIMEOUT) {
+            client.onDeliveryCompleted { trySend(it) }
+        }
+
+        assertTrue(client.publish(message))
+        assertEquals(message, waitPublish())
 
         teardown()
     }

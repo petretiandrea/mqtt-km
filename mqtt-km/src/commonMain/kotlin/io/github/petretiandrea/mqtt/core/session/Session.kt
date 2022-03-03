@@ -10,6 +10,6 @@ sealed interface Session {
     infix fun pushPendingSentNotAck(packet: MqttPacket)
     infix fun pushPendingReceivedNotAck(packet: MqttPacket)
 
-    fun <T : MqttPacket> popPendingReceivedNotAck(filter: (T) -> Boolean = { true }): T?
-    fun <T : MqttPacket> popPendingSentNotAck(filter: (T) -> Boolean = { true }): T?
+    fun <T : MqttPacket> popPendingReceivedNotAck(filter: (T) -> Boolean): T?
+    fun <T : MqttPacket> popPendingSentNotAck(filter: (T) -> Boolean): T?
 }
