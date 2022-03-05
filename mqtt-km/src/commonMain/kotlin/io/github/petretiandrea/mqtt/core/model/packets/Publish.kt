@@ -35,7 +35,7 @@ data class Publish(
             // need to parse header to obtain right qos and other fixed header info
             return FixedHeader.fromByte(data[offset++]).map { header ->
                 // skip remaining length
-                offset += FixedHeader.detectRemainingLengthSize(data)
+                //offset += FixedHeader.detectRemainingLengthSize(data)
 
                 val topicLength = Util.getIntFromMSBLSB(data[offset++], data[offset++])
                 val topic =

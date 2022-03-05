@@ -47,10 +47,6 @@ data class FixedHeader(
     }
 
     companion object {
-        /**
-         * @param packet The whole packet as array including fixed header
-         */
-        fun detectRemainingLengthSize(packet: UByteArray): Int = if (packet.size >= 130) 2 else 1
         fun fromByte(fixedHeader: UByte): Result<FixedHeader> {
             val parsedType = Type.values().firstOrNull { it.value == (fixedHeader.toInt() and 240) shr 4 }
             val parsedQos = QoS.values().firstOrNull { it.ordinal == (fixedHeader.toInt() and 6) shr 1 }

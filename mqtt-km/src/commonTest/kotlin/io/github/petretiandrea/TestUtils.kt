@@ -11,7 +11,7 @@ import kotlin.time.Duration
 
 typealias Wait<T> = suspend () -> T
 
-fun generateRandomMessage(size: Int): String {
+fun generateRandomString(size: Int): String {
     val alphabet = "abcdefghilmnopqrstuvzywx1234567890"
     return (0..size).map { alphabet[Random.nextInt(alphabet.length)] }.joinToString("")
 }

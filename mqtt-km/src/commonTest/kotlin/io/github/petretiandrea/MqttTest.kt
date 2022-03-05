@@ -5,7 +5,6 @@ import io.github.petretiandrea.AsyncTest.waitCallback
 import io.github.petretiandrea.TestCollection.assertContentEqualsIgnoreOrder
 import io.github.petretiandrea.mqtt.MqttClient
 import io.github.petretiandrea.mqtt.core.model.Message
-import io.github.petretiandrea.mqtt.core.model.MessageId
 import io.github.petretiandrea.mqtt.core.model.packets.Publish
 import io.github.petretiandrea.mqtt.core.model.packets.QoS
 import io.github.petretiandrea.mqtt.core.model.packets.Subscribe
@@ -18,7 +17,6 @@ import kotlinx.coroutines.runBlocking
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
@@ -39,13 +37,17 @@ class MqttTest {
 
     companion object {
         val DEFAULT_TEST_TIMEOUT = 10.seconds
-        fun createDefaultClient(scope: CoroutineScope, keepAliveSeconds: Int = 10): MqttClient {
+        fun createDefaultClient(scope: CoroutineScope, keepAliveSeconds: Int = 10): MqttClient =
+            createWillMessageClient(scope, keepAliveSeconds, null)
+
+        fun createWillMessageClient(scope: CoroutineScope, keepAliveSeconds: Int = 10, willMessage: Message?): MqttClient {
             return mqtt(scope) {
                 tcp {
                     hostname = "broker.hivemq.com"
                     port = 1883
-                    clientId = "test-km"
+                    clientId = "test-km-${generateRandomString(5)}"
                     keepAlive = keepAliveSeconds.seconds
+                    this.willMessage = willMessage
                 }
             }
         }
@@ -109,7 +111,7 @@ class MqttTest {
         client = createDefaultClient(this).apply { connect() }
         val topic = generateRandomTopic()
         val messages = QoS.values()
-            .map { Message(topic, generateRandomMessage(4), it, retain = false, duplicate = false) }
+            .map { Message(topic, generateRandomString(6), it, retain = false, duplicate = false) }
 
         val waitResponses = collectCallback<Message>(2, DEFAULT_TEST_TIMEOUT) {
             client.onDeliveryCompleted { trySend(it) }
@@ -163,7 +165,7 @@ class MqttTest {
     fun canPublishLargeMessage() = runBlocking {
         client = createDefaultClient(this).apply { connect() }
         val topic = generateRandomTopic()
-        val messagePayload = generateRandomMessage(127)
+        val messagePayload = generateRandomString(127)
         val message = Message(topic, messagePayload, qos = QoS.Q1, retain = false, duplicate = false)
 
         val waitPublish = waitCallback<Message>(DEFAULT_TEST_TIMEOUT) {
@@ -172,6 +174,27 @@ class MqttTest {
 
         assertTrue(client.publish(message))
         assertEquals(message, waitPublish())
+
+        teardown()
+    }
+
+    @Test
+    fun canConnectWithWillMessage() = runBlocking {
+        val topic = generateRandomTopic()
+        val willMessage = Message(topic, generateRandomString(10), QoS.Q1, messageId = 1)
+
+        val clientToDie = createWillMessageClient(this, willMessage = willMessage).apply { connect() }
+        client = createDefaultClient(this).apply { connect() }
+
+        val waitDeadMessage = waitCallback<Message>(DEFAULT_TEST_TIMEOUT) {
+            client.onMessageReceived { trySend(it) }
+        }
+
+        assertTrue(client.subscribe(topic, QoS.Q1))
+
+        delay(1000)
+        assertTrue(clientToDie.disconnect(gracefully = false).isSuccess)
+        assertEquals(willMessage, waitDeadMessage().copy(messageId = 1))
 
         teardown()
     }
