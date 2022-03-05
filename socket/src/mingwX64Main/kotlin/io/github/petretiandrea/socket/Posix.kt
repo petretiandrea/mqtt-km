@@ -91,25 +91,25 @@ actual fun close(socket: Int): Int {
     return platform.posix.closesocket(socket.convert())
 }
 
-actual fun memset(__s: CValuesRef<*>?, __c: Int, __n: ULong): CPointer<out CPointed>? {
-    return platform.posix.memset(__s, __c, __n)
+actual fun memset(s: CValuesRef<*>?, c: Int, n: ULong): CPointer<out CPointed>? {
+    return platform.posix.memset(s, c, n)
 }
 
-actual fun socket(__domain: Int, __type: Int, __protocol: Int): Int {
-    return platform.posix.socket(__domain, __type, __protocol).toInt()
+actual fun socket(domain: Int, type: Int, protocol: Int): Int {
+    return platform.posix.socket(domain, type, protocol).toInt()
 }
 
 actual fun MemScope.select(
-    __nfds: Int,
-    __readfds: CValuesRef<fd_set>?,
-    __writefds: CValuesRef<fd_set>?,
-    __exceptfds: CValuesRef<fd_set>?,
+    nfds: Int,
+    readfds: CValuesRef<fd_set>?,
+    writefds: CValuesRef<fd_set>?,
+    exceptfds: CValuesRef<fd_set>?,
     timeout: Long
 ): Int {
     val timeoutStruct = alloc<timeval>()
     timeoutStruct.tv_sec = 0
     timeoutStruct.tv_usec = (timeout * 1000).toInt()
-    return platform.windows.select(__nfds, __readfds, __writefds, __exceptfds, timeoutStruct.ptr)
+    return platform.windows.select(nfds, readfds, writefds, exceptfds, timeoutStruct.ptr)
 }
 
 actual fun socketsInit() {

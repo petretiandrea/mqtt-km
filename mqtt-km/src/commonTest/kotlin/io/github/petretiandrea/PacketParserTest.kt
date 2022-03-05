@@ -69,7 +69,7 @@ class PacketParserTest {
     @Test
     fun canSerializeDeserializePublish() {
         val publish = Publish(Message("topic", "message", qos = QoS.Q1, retain = false, duplicate = false))
-        val publishByte = publish.toByteArray()
+        val publishByte = publish.toByteArray().filterIndexed { index, _ ->  index != 1 }.toUByteArray()
         assertEquals(publish, Publish.fromByteArray(publishByte).getOrNull())
     }
 
@@ -78,7 +78,9 @@ class PacketParserTest {
         val message = generateRandomString(127)
         val publish =
             Publish(Message(generateRandomString(5), message, qos = QoS.Q1, retain = false, duplicate = false))
-        val publishByte = publish.toByteArray()
+
+        // filter remove remaining length bytes
+        val publishByte = publish.toByteArray().filterIndexed { index, _ ->  index != 1 && index != 2 }.toUByteArray()
         assertEquals(publish, Publish.fromByteArray(publishByte).getOrNull())
     }
 
