@@ -17,6 +17,13 @@ class TopicValidatorTest {
     }
 
     @Test
+    fun tooLongTopicMustBeInvalid() {
+        val topic = generateRandomString(65_535 + 1)
+        assertFalse(validator.isValidPublishTopic(topic))
+        assertFalse(validator.isValidSubscribeTopic(topic))
+    }
+
+    @Test
     fun canRecognizeValidSubscribeTopics() {
         val validTopics = listOf(
             "topic/+/",

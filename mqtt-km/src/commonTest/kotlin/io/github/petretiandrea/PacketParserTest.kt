@@ -3,16 +3,17 @@ package io.github.petretiandrea
 import io.github.petretiandrea.mqtt.core.MqttVersion
 import io.github.petretiandrea.mqtt.core.model.ConnectionStatus
 import io.github.petretiandrea.mqtt.core.model.Message
+import io.github.petretiandrea.mqtt.core.model.MessageId
 import io.github.petretiandrea.mqtt.core.model.packets.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @ExperimentalUnsignedTypes
-class PacketParserOfflineTest {
+class PacketParserTest {
 
     @Test
-    fun canSerializeDeserializeFixedHeader(){
+    fun canSerializeDeserializeFixedHeader() {
         val header = FixedHeader(Type.CONNECT, false, QoS.Q0, false)
         val bytes = header.toByteArray(0)
         assertTrue(bytes.isNotEmpty())
@@ -36,9 +37,9 @@ class PacketParserOfflineTest {
     fun canSerializeDeserializeConnect() {
         val connect = Connect(
             version = MqttVersion.MQTT_31,
-            clientId = "ciaoo",
-            username = "pedro",
-            password = "pedro",
+            clientId = generateRandomString(5),
+            username = generateRandomString(6),
+            password = generateRandomString(6),
             cleanSession = false,
             keepAliveSeconds = 2,
             willMessage = null
@@ -47,31 +48,22 @@ class PacketParserOfflineTest {
     }
 
     @Test
-    fun canSerializeDeserializePubComp() {
-        val ack = PubComp(1234)
-        val dataBytes = ack.toByteArray().let { it.copyOfRange(2, it.size) }
-        assertEquals(ack, PubComp.fromByteArray(dataBytes).getOrNull())
-    }
+    fun canSerializeDeserializeMqttAcks() {
+        val acks = listOf(
+            PubComp(MessageId.generate()),
+            PubRel(MessageId.generate()),
+            PubRec(MessageId.generate()),
+            UnsubAck(MessageId.generate()),
+            PubAck(MessageId.generate()),
+        ) + QoS.values().zip(listOf(true, false)).map {
+            SubAck(MessageId.generate(), it.first, it.second)
+        } + ConnectionStatus.values().zip(listOf(true, false)).map {
+            ConnAck(it.second, it.first)
+        }
 
-    @Test
-    fun canSerializeDeserializePubRec() {
-        val ack = PubRec(1234)
-        val dataBytes = ack.toByteArray().let { it.copyOfRange(2, it.size) }
-        assertEquals(ack, PubRec.fromByteArray(dataBytes).getOrNull())
-    }
-
-    @Test
-    fun canSerializeDeserializePubRel() {
-        val ack = PubRel(1234)
-        val dataBytes = ack.toByteArray().let { it.copyOfRange(2, it.size) }
-        assertEquals(ack, PubRel.fromByteArray(dataBytes).getOrNull())
-    }
-
-    @Test
-    fun canSerializeDeserializeUnsubAck() {
-        val ack = UnsubAck(1234)
-        val dataBytes = ack.toByteArray().let { it.copyOfRange(2, it.size) }
-        assertEquals(ack, UnsubAck.fromByteArray(dataBytes).getOrNull())
+        acks.forEach {
+            assertEquals(it, MqttTestUtil.serializeAndParse(it))
+        }
     }
 
     @Test
@@ -83,9 +75,26 @@ class PacketParserOfflineTest {
 
     @Test
     fun canSerializeDeserializeBigPublishPacket() {
-        val message = (0..127).joinToString(separator = "") { "a" }
-        val publish = Publish(Message("topic", message, qos = QoS.Q1, retain = false, duplicate = false))
+        val message = generateRandomString(127)
+        val publish =
+            Publish(Message(generateRandomString(5), message, qos = QoS.Q1, retain = false, duplicate = false))
         val publishByte = publish.toByteArray()
         assertEquals(publish, Publish.fromByteArray(publishByte).getOrNull())
+    }
+
+    @Test
+    fun canProduceValidPingPackets() {
+        val respByte = PingResp.toByteArray().first()
+        val reqByte = PingReq.toByteArray().first()
+
+        assertEquals(Type.PINGRESP, FixedHeader.fromByte(respByte).getOrThrow().type)
+        assertEquals(Type.PINGREQ, FixedHeader.fromByte(reqByte).getOrThrow().type)
+    }
+}
+
+object MqttTestUtil {
+    fun serializeAndParse(packet: MqttPacket): MqttPacket? {
+        val (header, body) = packet.toByteArray().let { it.take(1).first() to it.drop(2).toUByteArray() }
+        return MqttPacket.parse(header, body)
     }
 }

@@ -24,7 +24,7 @@ interface MqttClient : ClientCallback {
     val isConnected: Boolean
 
     suspend fun connect(): Result<Unit>
-    suspend fun disconnect(): Result<Unit>
+    suspend fun disconnect(gracefully: Boolean = true): Result<Unit>
 
     suspend fun publish(message: Message): Boolean
     suspend fun publish(
@@ -101,11 +101,15 @@ internal class MqttClientImpl constructor(
         return connected
     }
 
-    override suspend fun disconnect(): Result<Unit> {
+    override suspend fun disconnect(gracefully: Boolean): Result<Unit> {
         if (isConnected) {
             isConnected = false
-            transport.writePacket(Disconnect)
-            eventLoop?.cancel("Disconnected by user")
+            if (gracefully) {
+                transport.writePacket(Disconnect)
+                eventLoop?.cancel("Disconnected by user")
+            } else {
+                eventLoop?.cancel("Disconnected by user ungracefully")
+            }
             eventLoop?.join()
             transport.close()
         }
