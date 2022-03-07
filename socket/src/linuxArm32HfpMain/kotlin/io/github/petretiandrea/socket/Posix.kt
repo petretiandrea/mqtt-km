@@ -90,7 +90,7 @@ actual fun close(socket: Int): Int {
 }
 
 actual fun memset(s: CValuesRef<*>?, c: Int, n: ULong): CPointer<out CPointed>? {
-    return platform.posix.memset(s, c, n)
+    return platform.posix.memset(s, c, n.convert())
 }
 
 actual fun socket(domain: Int, type: Int, protocol: Int): Int {
@@ -102,7 +102,7 @@ actual fun memcpy(
     source: CPointer<*>?,
     size: ULong
 ): CPointer<out CPointed>? = memScoped {
-    return platform.posix.memcpy(destination, source, size)
+    return platform.posix.memcpy(destination, source, size.convert())
 }
 
 actual fun MemScope.select(
@@ -114,7 +114,7 @@ actual fun MemScope.select(
 ): Int {
     val timeoutStruct = alloc<timeval>()
     timeoutStruct.tv_sec = 0
-    timeoutStruct.tv_usec = timeout * 1000
+    timeoutStruct.tv_usec = (timeout * 1000).convert()
     return select(nfds, readfds, writefds, exceptfds, timeoutStruct.ptr)
 }
 

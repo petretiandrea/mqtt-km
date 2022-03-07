@@ -96,6 +96,14 @@ actual fun socket(domain: Int, type: Int, protocol: Int): Int {
     return platform.posix.socket(domain, type, protocol)
 }
 
+actual fun memcpy(
+    destination: CPointer<*>?,
+    source: CPointer<*>?,
+    size: ULong
+): CPointer<out CPointed>? = memScoped {
+    return platform.posix.memcpy(destination, source, size)
+}
+
 actual fun MemScope.select(
     nfds: Int,
     readfds: CValuesRef<fd_set>?,

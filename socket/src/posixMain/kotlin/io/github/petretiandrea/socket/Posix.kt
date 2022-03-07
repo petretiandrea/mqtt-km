@@ -45,6 +45,11 @@ expect fun memset(
     n: ULong
 ): CPointer<out CPointed>?
 
+expect fun memcpy(
+    destination: CPointer<*>?,
+    source: CPointer<*>?,
+    size: ULong
+): CPointer<out CPointed>?
 
 expect fun socket(domain: Int, type: Int, protocol: Int): Int
 
