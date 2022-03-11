@@ -8,7 +8,10 @@ import io.github.petretiandrea.socket.exception.SocketException
 import io.github.petretiandrea.socket.stream.InputStream
 import io.github.petretiandrea.socket.stream.OutputStream
 import kotlinx.cinterop.*
-import platform.posix.*
+import platform.posix.fd_set
+import platform.posix.posix_FD_ISSET
+import platform.posix.posix_FD_SET
+import platform.posix.posix_FD_ZERO
 import kotlin.time.Duration
 
 @OptIn(ExperimentalUnsignedTypes::class)

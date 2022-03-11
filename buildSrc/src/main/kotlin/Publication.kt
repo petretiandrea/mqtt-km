@@ -41,7 +41,7 @@ fun Project.configureMavenPublish() {
                 pom {
                     name.set(project.name)
                     description.set(project.description)
-                    url.set("https://gitlab.com/petretiandrea/mqtt-km/")
+                    url.set("https://github.com/petretiandrea/mqtt-km/")
 
                     licenses {
                         license {
@@ -51,8 +51,8 @@ fun Project.configureMavenPublish() {
                     }
 
                     scm {
-                        connection.set("https://gitlab.com/petretiandrea/mqtt-km.git")
-                        url.set("https://gitlab.com/petretiandrea/mqtt-km.git")
+                        connection.set("https://github.com/petretiandrea/mqtt-km.git")
+                        url.set("https://github.com/petretiandrea/mqtt-km.git")
                     }
 
                     developers {

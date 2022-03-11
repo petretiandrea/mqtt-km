@@ -14,6 +14,7 @@ kotlin {
     mingwX64()
     linuxX64()
     linuxArm64()
+    linuxArm32Hfp()
 
     configureMavenPublish()
 
@@ -68,5 +69,9 @@ kotlin {
             dependsOn(posixMain)
         }
         val linuxArm64Test by getting
+
+        val linuxArm32HfpMain by getting {
+            dependsOn(posixMain)
+        }
     }
 }

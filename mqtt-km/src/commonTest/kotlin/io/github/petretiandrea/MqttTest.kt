@@ -16,6 +16,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlin.random.Random
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
@@ -40,7 +41,11 @@ class MqttTest {
         fun createDefaultClient(scope: CoroutineScope, keepAliveSeconds: Int = 10): MqttClient =
             createWillMessageClient(scope, keepAliveSeconds, null)
 
-        fun createWillMessageClient(scope: CoroutineScope, keepAliveSeconds: Int = 10, willMessage: Message?): MqttClient {
+        fun createWillMessageClient(
+            scope: CoroutineScope,
+            keepAliveSeconds: Int = 10,
+            willMessage: Message?
+        ): MqttClient {
             return mqtt(scope) {
                 tcp {
                     hostname = "broker.hivemq.com"
@@ -54,10 +59,21 @@ class MqttTest {
     }
 
     @Test
+    fun nonExistingBrokerMustFailConnect() = runBlocking {
+        client = mqtt {
+            tcp {
+                hostname = ""
+            }
+        }
+
+        assertTrue { client.connect().isFailure }
+    }
+
+    @Test
     fun canConnectToServer() = runBlocking {
         client = createDefaultClient(this)
         val connected = client.connect()
-        assertTrue(connected.isSuccess, "${connected.exceptionOrNull()}" )
+        assertTrue(connected.isSuccess, "${connected.exceptionOrNull()}")
         assertTrue(client.isConnected)
 
         teardown()
@@ -142,6 +158,32 @@ class MqttTest {
         val collectedAck = waitResponses().map { it.second to it.first.topic } // qos -> topic
 
         assertContentEqualsIgnoreOrder(topics, collectedAck)
+        teardown()
+    }
+
+    @Test
+    fun mustReceiveMessageWithDifferentQos() = runBlocking {
+        client = createDefaultClient(this).apply { connect() }
+        val messages = QoS.values().map {
+            Message(
+                generateRandomTopic(),
+                generateRandomString(10),
+                it,
+            )
+        }.toList()
+
+        val waitMessages = collectCallback<Message>(3, DEFAULT_TEST_TIMEOUT) {
+            client.onMessageReceived { trySend(it) }
+        }
+
+        val subscribed = messages.map { client.subscribe(it.topic, it.qos) }
+        assertTrue(subscribed.all { it })
+
+        messages.forEach { client.publish(it.topic, it.message, it.qos, it.retain, it.duplicate) }
+
+        assertContentEqualsIgnoreOrder(
+            messages.map { it.copy(messageId = 0) },
+            waitMessages().map { it.copy(messageId = 0) })
         teardown()
     }
 

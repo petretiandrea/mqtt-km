@@ -66,7 +66,7 @@ class NativeMultiplatformBuffer : MultiplatformBuffer {
         val realIndex = index ?: this.cursor
         val arr = ByteArray(length)
         arr.usePinned {
-            memcpy(it.addressOf(0), this.firstPointer + realIndex, length.toULong())
+            io.github.petretiandrea.socket.memcpy(it.addressOf(0), this.firstPointer + realIndex, length.toULong())
         }
         return arr
     }
@@ -86,7 +86,7 @@ class NativeMultiplatformBuffer : MultiplatformBuffer {
 
         val realIndex = index ?: this.cursor
         array.usePinned {
-            memcpy(it.addressOf(0) + destinationOffset, this.firstPointer + realIndex, length.toULong())
+            io.github.petretiandrea.socket.memcpy(it.addressOf(0) + destinationOffset, this.firstPointer + realIndex, length.toULong())
         }
     }
 
@@ -186,7 +186,7 @@ class NativeMultiplatformBuffer : MultiplatformBuffer {
         val realIndex = index ?: this.cursor
         array.usePinned {
             val address = it.addressOf(0)
-            memcpy(this.firstPointer + realIndex, address, it.get().size.toULong())
+            io.github.petretiandrea.socket.memcpy(this.firstPointer + realIndex, address, it.get().size.toULong())
         }
     }
 
@@ -260,7 +260,7 @@ class NativeMultiplatformBuffer : MultiplatformBuffer {
         if (this.destroyed) throw BufferDestroyedException()
         val tmpArr = ByteArray(this.limit)
         tmpArr.usePinned {
-            memcpy(it.addressOf(0), this.firstPointer, this.limit.toULong())
+            io.github.petretiandrea.socket.memcpy(it.addressOf(0), this.firstPointer, this.limit.toULong())
         }
 
         return tmpArr
@@ -274,7 +274,7 @@ class NativeMultiplatformBuffer : MultiplatformBuffer {
     override fun clone(): MultiplatformBuffer {
         if (this.destroyed) throw BufferDestroyedException()
         val tmp = NativeMultiplatformBuffer(this.capacity)
-        memcpy(tmp.firstPointer, this.firstPointer, this.capacity.toULong())
+        io.github.petretiandrea.socket.memcpy(tmp.firstPointer, this.firstPointer, this.capacity.toULong())
         tmp.limit = this.limit
         return tmp
     }
